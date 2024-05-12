@@ -1,0 +1,8 @@
+generate:
+  - types
+  - client
+filter:
+  tags:
+    - Accounts
+    - Transactions
+accessModifier: package
