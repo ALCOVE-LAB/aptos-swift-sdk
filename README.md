@@ -4,7 +4,7 @@
 
 ## Milestone 1
 Complete the main program architecture, and complete the basic capabilities including reading accounts and transactions, basic unit tests, and demo examples.
-- [ x ] BCS, serialize & deserialize basic data protocol
+- [x] BCS, serialize & deserialize basic data protocol
 - [ ] Clients & RESTful APIs
 - [ ] Account & Transaction, support read Account info and Transaction
 - [ ] Basic Unit Test
