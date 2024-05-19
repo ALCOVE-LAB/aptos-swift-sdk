@@ -1,4 +1,5 @@
 
+
 public protocol Network {
     var name: String { get }
     var chainId: Int { get }

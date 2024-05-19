@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "9B3C05142BE8C353004BF1DD"
-               BuildableName = "Demo.app"
+               BlueprintIdentifier = "Demo"
+               BuildableName = "Demo"
                BlueprintName = "Demo"
-               ReferencedContainer = "container:Demo.xcodeproj">
+               ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -43,10 +43,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9B3C05142BE8C353004BF1DD"
-            BuildableName = "Demo.app"
+            BlueprintIdentifier = "Demo"
+            BuildableName = "Demo"
             BlueprintName = "Demo"
-            ReferencedContainer = "container:Demo.xcodeproj">
+            ReferencedContainer = "container:">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -60,10 +60,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9B3C05142BE8C353004BF1DD"
-            BuildableName = "Demo.app"
+            BlueprintIdentifier = "Demo"
+            BuildableName = "Demo"
             BlueprintName = "Demo"
-            ReferencedContainer = "container:Demo.xcodeproj">
+            ReferencedContainer = "container:">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

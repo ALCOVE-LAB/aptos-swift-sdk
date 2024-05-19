@@ -25,7 +25,28 @@ extension Serializable {
 }
 
 
-// MARK: Transaction
+// MARK: - Account
+
+public struct AccountData: Codable, Hashable, Sendable {
+    
+    public var sequenceNumber: String
+    
+    public var authenticationKey: String
+    
+    public init(
+        sequence_number: String,
+        authentication_key: String
+    ) {
+        self.sequenceNumber = sequence_number
+        self.authenticationKey = authentication_key
+    }
+    public enum CodingKeys: String, CodingKey {
+        case sequenceNumber = "sequence_number"
+        case authenticationKey = "authentication_key"
+    }
+}
+
+// MARK: - Transaction
 public enum ScriptTransactionArgumentVariants: Int {
   case U8 = 0
   case U64 = 1

@@ -16,10 +16,10 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.3.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.3.0"),
-        .package(url: "https://github.com/apple/swift-openapi-generator.git", from: "1.2.1"),
         .package(url: "https://github.com/apple/swift-openapi-urlsession.git", from: "1.0.1"),
         .package(url: "https://github.com/apple/swift-openapi-runtime", from: "1.4.0"),
-        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0")
+        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
+        .package(url: "https://github.com/apple/swift-http-types.git", from: "1.1.0")
     ],
     targets: [
         // MARK: - Targets
@@ -28,6 +28,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
                 "Clients",
                 "Utils",
                 "Types",
@@ -40,9 +41,6 @@ let package = Package(
             dependencies: [
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
                 .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession")
-            ],
-            plugins: [
-                .plugin(name: "OpenAPIGenerator", package: "swift-openapi-generator")
             ]
         ),
         .target(
@@ -78,7 +76,8 @@ let package = Package(
                 "BCS",
                 "Types",
                 "Core",
-                "Utils"
+                "Utils",
+                "Clients"
             ],
             path: "Tests"
         )
