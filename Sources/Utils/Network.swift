@@ -1,18 +1,13 @@
+import Foundation
 
 
-public protocol Network {
-    var name: String { get }
-    var chainId: Int { get }
-    var api: String { get }
-}
-
-public enum NetworkType: String {
-    case mainnet = "mainnet"
-    case testnet = "testnet"
-    case devnet = "devnet"
-    case randomnet = "randomnet"
-    case local = "local"
-    case custom = "custom"
+public enum AptosApiEnv {
+    case mainnet
+    case testnet
+    case devnet
+    case randomnet
+    case local
+    case custom(nodeApi: String?, indexerApi: String?, faucetApi: String?)
     
     var nodeApi: String {
         switch self {
@@ -26,8 +21,8 @@ public enum NetworkType: String {
             return "https://fullnode.random.aptoslabs.com/v1"
         case .local:
             return "http://127.0.0.1:8080/v1"
-        case .custom:
-            return ""
+        case .custom(let nodeApi, _, _):
+            return nodeApi ?? ""
         }
     }
     
@@ -43,8 +38,8 @@ public enum NetworkType: String {
             return "https://indexer-randomnet.hasura.app/v1/graphql"
         case .local:
             return "http://127.0.0.1:8090/v1/graphql"
-        case .custom:
-            return ""
+        case .custom(_, let indexerApi, _):
+            return indexerApi ?? ""
         }
     }
     
@@ -60,61 +55,82 @@ public enum NetworkType: String {
             return "https://faucet.random.aptoslabs.com"
         case .local:
             return "http://127.0.0.1:8081"
-        case .custom:
-            return ""
+        case .custom(_, _, let faucetApi):
+            return faucetApi ?? ""
         }
     }
 }
 
-
-public enum NetworkAccess {
-    case rest
+public enum AptosApiType {
+    case fullNode
     case indexer
     case faucet
 }
 
-public struct NetworkOptions: Network {
+public struct Network {
     
-    public let networkType: NetworkType
-    public let networkAccess: NetworkAccess
-    private var _api: String?
+    public let apiEnv: AptosApiEnv
+    public let apiType: AptosApiType
     
     public static func custom(
-        networkType: NetworkType = .custom,
-        networkAccess: NetworkAccess = .rest,
-        chainId: Int = 0,
-        api: String) -> NetworkOptions {
-        var config = self.init(networkType: networkType, networkAccess: networkAccess)
-        config._api = api
+        apiEnv: AptosApiEnv,
+        apiType: AptosApiType = .fullNode
+    ) -> Network {
+        var config = self.init(apiEnv: apiEnv, apiType: apiType)
         return config
     }
     
-    public init(networkType: NetworkType, networkAccess: NetworkAccess) {
-        self.networkType = networkType
-        self.networkAccess = networkAccess
+    public init(apiEnv: AptosApiEnv, apiType: AptosApiType) {
+        self.apiEnv = apiEnv
+        self.apiType = apiType
     }
     
-    
     public var name: String {
-        return networkType.rawValue
+        switch apiEnv {
+        case .mainnet:
+            "mainnet"
+        case .testnet:
+            "testnet"
+        case .devnet:
+            "devnet"
+        case .randomnet:
+            "randomnet"
+        case .local:
+            "local"
+        case .custom:
+            "custom"
+        }
     }
     
     public var api: String {
-        if let api = _api {
-            return api
-        }
-        switch networkAccess {
-        case .rest:
-            return networkType.nodeApi
+        switch apiType {
+        case .fullNode:
+            return apiEnv.nodeApi
         case .indexer:
-            return networkType.indexerApi
+            return apiEnv.indexerApi
         case .faucet:
-            return networkType.faucetApi
+            return apiEnv.faucetApi
         }
     }
     
+    public func apiType(with url: URL) -> AptosApiType? {
+        if case .custom = apiEnv {
+            return nil
+        }
+        if apiEnv.nodeApi == url.absoluteString {
+            return .fullNode
+        }
+        if apiEnv.indexerApi == url.absoluteString {
+            return .indexer
+        }
+        if apiEnv.faucetApi == url.absoluteString {
+            return .faucet
+        }
+        return nil
+    }
+    
     public var chainId: Int {
-        switch networkType {
+        switch apiEnv {
         case .mainnet:
             return 1
         case .testnet:

@@ -52,6 +52,7 @@ let package = Package(
         .target(
             name: "Types",
             dependencies: [
+                .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
                 "BCS"
             ]
         ),

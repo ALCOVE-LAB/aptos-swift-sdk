@@ -4,16 +4,17 @@ import HTTPTypes
 import OpenAPIRuntime
 import OpenAPIURLSession
 
-package struct AptosApiError: Sendable, Error {
-    package let body: Body
-    package var requestOptions: any Sendable
+public struct AptosApiError: Error {
+    public let body: Body
+    public let baseURL: URL?
+    public let requestOptions: any Sendable
+    
     package var request: HTTPRequest?
     package var requestBody: HTTPBody?
-    package var baseURL: URL?
     package var response: HTTPResponse?
     package var responseBody: HTTPBody?
     
-    package init(
+    public init(
         body: Body,
         requestOptions: any Sendable,
         request: HTTPRequest? = nil,
@@ -32,25 +33,26 @@ package struct AptosApiError: Sendable, Error {
     }
 }
 
-package extension AptosApiError {
-    struct Body: Codable, Hashable, Sendable {
+extension AptosApiError {
+    public var status: Int? {
+        return response?.status.code
+    }
+}
+
+extension AptosApiError {
+    public struct Body: Codable, Hashable, Sendable {
         /// A message describing the error
-        ///
-        /// - Remark: Generated from `#/components/schemas/AptosError/message`.
-        package var message: String
-        /// - Remark: Generated from `#/components/schemas/AptosError/error_code`.
-        package var errorCode: ErrorCode
+        public var message: String
+        public var errorCode: ErrorCode
         /// A code providing VM error details when submitting transactions to the VM
-        ///
-        /// - Remark: Generated from `#/components/schemas/AptosError/vm_error_code`.
-        package var vmErrorCode: Int?
-        /// Creates a new `AptosError`.
+        public var vmErrorCode: Int?
+        /// Creates a new `AptosApiError.Body`.
         ///
         /// - Parameters:
         ///   - message: A message describing the error
-        ///   - error_code:
-        ///   - vm_error_code: A code providing VM error details when submitting transactions to the VM
-        package init(
+        ///   - errorCode:
+        ///   - vmErrorCode: A code providing VM error details when submitting transactions to the VM
+        public init(
             message: String,
             errorCode: ErrorCode,
             vmErrorCode: Int? = nil
@@ -59,7 +61,8 @@ package extension AptosApiError {
             self.errorCode = errorCode
             self.vmErrorCode = vmErrorCode
         }
-        package enum CodingKeys: String, CodingKey {
+        
+        public enum CodingKeys: String, CodingKey {
             case message
             case errorCode = "error_code"
             case vmErrorCode = "vm_error_code"
@@ -70,7 +73,7 @@ package extension AptosApiError {
 extension AptosApiError {
     /// These codes provide more granular error information beyond just the HTTP
     /// status code of the response.
-    package enum ErrorCode: String, Codable, Hashable, Sendable {
+    public enum ErrorCode: String, Codable, Hashable, Sendable {
         case accountNotFound = "account_not_found"
         case resourceNotFound = "resource_not_found"
         case moduleNotFound = "module_not_found"
@@ -94,4 +97,43 @@ extension AptosApiError {
         case apiDisabled = "api_disabled"
     }
 
+}
+
+extension AptosApiError: CustomStringConvertible {
+    
+    /// A human-readable description of the api error.
+    ///
+    /// This computed property returns a string that includes information about the aptos api error.
+    ///
+    /// - Returns: A string describing the aptos api error and its associated details.
+    public var description: String {
+        "Aptos error - message: '\(body.message)', errCode: '\(String(describing: body.errorCode))', vmErrorCode: '\(body.vmErrorCode)', requestOptions: \(String(describing: requestOptions)), request: \(request?.prettyDescription ?? "<nil>"), requestBody: \(requestBody?.prettyDescription ?? "<nil>"), baseURL: \(baseURL?.absoluteString ?? "<nil>"), response: \(response?.prettyDescription ?? "<nil>"), responseBody: \(responseBody?.prettyDescription ?? "<nil>")"
+    }
+}
+
+extension AptosApiError: LocalizedError {
+    /// A localized description of the aptos api error.
+    ///
+    /// This computed property provides a localized human-readable description of the aptos api error, which is suitable for displaying to users.
+    ///
+    /// - Returns: A localized string describing the aptos api error.
+    public var errorDescription: String? { description }
+}
+
+
+private extension HTTPRequest {
+    var prettyDescription: String { "\(method.rawValue) \(path ?? "<nil>") [\(headerFields.prettyDescription)]" }
+}
+
+private extension HTTPBody { var prettyDescription: String { String(describing: self) } }
+
+private extension HTTPFields {
+    var prettyDescription: String {
+        sorted(by: { $0.name.canonicalName.localizedCompare($1.name.canonicalName) == .orderedAscending })
+            .map { "\($0.name.canonicalName): \($0.value)" }.joined(separator: "; ")
+    }
+}
+
+private extension HTTPResponse {
+    var prettyDescription: String { "\(status.code) [\(headerFields.prettyDescription)]" }
 }

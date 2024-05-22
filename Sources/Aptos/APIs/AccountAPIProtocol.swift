@@ -3,73 +3,9 @@ import Clients
 import Types
 import HTTPTypes
 
-extension ClientInterface {
-    private func sendRequest<Body>(_ request: any _RequestOptions) async throws -> AptosResponse<Body> where Body: Decodable {
-        return try await send(input: request) { input in
-            return try input.serializer(with: converter)
-        } deserializer: { resp, httpBody in
-            if case .successful = resp.status.kind {
-                return try await converter.getResponseBodyAsJSON(
-                    Body.self,
-                    from: httpBody
-                ) { body in
-                    return AptosResponse(
-                        requestOptions: request,
-                        body: body,
-                        response: resp,
-                        responseBody: httpBody
-                    )
-                }
-            } else {
-                let apiError = try await converter.getResponseBodyAsJSON(
-                    AptosApiError.Body.self,
-                    from: httpBody) { body in
-                    return AptosApiError(
-                        body: body,
-                        requestOptions: request,
-                        response: resp,
-                        responseBody: httpBody
-                    )
-                }
-                throw apiError
-            }
-        }
-    }
-    
-    func sendPaginateRequest<Body>(
-        _ request: inout any RequestOptions & PagenationRequest
-    ) async throws  -> AptosResponse<[Body]> where Body: Decodable {
-        var cursor: String?
-        var query = request.query ?? [:]
-        var result: [Body] = []
-        
-        repeat {
-            let resp: AptosResponse<[Body]> = try await get(request)
-            cursor = resp.response?.headerFields[HTTPField.Name.Aptos.cursor]
-            query["start"] = cursor
-            result.append(contentsOf: resp.body)
-            request.query = query
-        } while (cursor != nil)
-        
-        return .init(requestOptions: request, body: result)
-    }
-    
-    func get<Body>(
-        _ request: any RequestOptions
-    ) async throws -> AptosResponse<Body> where Body: Decodable {
-        return try await sendRequest(request)
-    }
-    
-    func post<Body>(
-        _ request: any PostRequestOptions
-    ) async throws -> AptosResponse<Body> where Body: Decodable {
-        return try await sendRequest(request)
-    }
-}
-
 public protocol AccountAPIProtocol: Sendable {}
 
-extension AccountAPIProtocol where Self: ClientInterface {
+public extension AccountAPIProtocol where Self: AptosCapability {
     func getAccountInfo(
         address: HexInput,
         ledgerVersion: String? = nil) async throws -> AccountData {
@@ -79,7 +15,7 @@ extension AccountAPIProtocol where Self: ClientInterface {
     func getAccountInfo(
         address: AccountAddressInput,
         ledgerVersion: String? = nil) async throws -> AccountData {
-        return try await get(AccountApiOperation.GetAccount.info(AccountAddress.from(address))).body
+            return try await client.get(AccountApiOperation.GetAccount.info(AccountAddress.from(address))).body
     }
     
 
@@ -94,10 +30,10 @@ extension AccountAPIProtocol where Self: ClientInterface {
         ledgerVersion: String? = nil,
         page: Pagination? = nil) async throws -> [MoveResource] {
             var request: PagenationRequest & RequestOptions = 
-            AccountApiOperation.GetAccountPageModule.resources(
+            AccountApiOperation.GetAccountPage.resources(
                 address: try AccountAddress.from(address),
                 ledgerVersion: ledgerVersion, page: page)
-            return try await sendPaginateRequest(&request).body
+            return try await client.sendPaginateRequest(&request).body
     }
     
     
@@ -120,7 +56,7 @@ extension AccountAPIProtocol where Self: ClientInterface {
             resourceType: resourceType,
             ledgerVersion: ledgerVersion
         )
-        return try await get(request).body
+        return try await client.get(request).body
     }
     
     
@@ -140,11 +76,11 @@ extension AccountAPIProtocol where Self: ClientInterface {
         ledgerVersion: String? = nil,
         page: Pagination? = nil) async throws -> [MoveModuleBytecode] {
             var request: PagenationRequest & RequestOptions =
-            AccountApiOperation.GetAccountPageModule.modules(
+            AccountApiOperation.GetAccountPage.modules(
                 address: try AccountAddress.from(address),
                 ledgerVersion: ledgerVersion,
                 page: page)
-            return try await sendPaginateRequest(&request).body
+            return try await client.sendPaginateRequest(&request).body
     }
     
     func getAccountModule(
@@ -161,35 +97,45 @@ extension AccountAPIProtocol where Self: ClientInterface {
         moduleName: String,
         ledgerVersion: String? = nil
     ) async throws -> MoveModuleBytecode {
-        //  TODO: support a cache?
+        //  TODO: support cache?
         let request: RequestOptions = AccountApiOperation.GetAccount.module(
             try AccountAddress.from(address),
             moduleName: moduleName,
             ledgerVersion: ledgerVersion
         )
-        return try await get(request).body
+        return try await client.get(request).body
+    }
+    
+    
+    func getAccountTransactions(address: HexInput, page: Pagination? = nil) async throws -> [TransactionResponse] {
+        let hex = try Hex.fromHexInput(address)
+        return try await self.getAccountTransactions(
+            address: AccountAddress.from(hex.toString()),
+            page: page
+        )
+    }
+    func getAccountTransactions(address: AccountAddressInput, page: Pagination? = nil) async throws -> [TransactionResponse] {
+        var request: PagenationRequest & RequestOptions =
+        AccountApiOperation.GetAccountPage.transactions(
+            address: try AccountAddress.from(address), page: page)
+        return try await client.sendPaginateRequest(&request).body
     }
 }
 
-public typealias Pagination = (offset: String, limit: Int)
-
-protocol PagenationRequest {
-    var page: Pagination? { get }
-    var query: [String: Encodable]? {set get}
-}
 
 struct AccountApiOperation {
-    struct GetAccountPageModule: RequestOptions, PagenationRequest {
+    struct GetAccountPage: RequestOptions, PagenationRequest {
         
         enum ModuleType {
             case reouseces
             case modules
+            case transactions
         }
         
         static func resources(
             address: AccountAddress,
             ledgerVersion: String? = nil,
-            page: Pagination? = nil) -> GetAccountPageModule {
+            page: Pagination? = nil) -> GetAccountPage {
             self.init(
                 moduleType: .reouseces,
                 address: address,
@@ -197,10 +143,11 @@ struct AccountApiOperation {
                 page: page
             )
         }
+        
         static func modules(
             address: AccountAddress,
             ledgerVersion: String? = nil,
-            page: Pagination? = nil) -> GetAccountPageModule {
+            page: Pagination? = nil) -> GetAccountPage {
             return self.init(
                 moduleType: .modules,
                 address: address,
@@ -209,12 +156,40 @@ struct AccountApiOperation {
             )
         }
         
+        static func transactions(
+            address: AccountAddress,
+            page: Pagination?) -> GetAccountPage {
+                return self.init(
+                    moduleType: .transactions,
+                    address: address,
+                    ledgerVersion: nil,
+                    page: page
+                )
+            }
+
         let address: AccountAddress
         let ledgerVersion: String?
         let page: Pagination?
         let moduleType: ModuleType
+
+        var path: String {
+            switch moduleType {
+            case .reouseces:
+                return "/accounts/\(address.toString())/resources"
+            case .modules:
+                return "/accounts/\(address.toString())/modules"
+            case .transactions:
+                return "/accounts/\(address.toString())/transactions"
+            }
+        }
+        var query: [String : Encodable]?
         
-        private init(moduleType: ModuleType, address: AccountAddress, ledgerVersion: String? = nil, page: Pagination? = nil) {
+        private init(
+            moduleType: ModuleType,
+            address: AccountAddress,
+            ledgerVersion: String? = nil,
+            page: Pagination? = nil
+        ) {
             self.moduleType = moduleType
             self.address = address
             self.ledgerVersion = ledgerVersion
@@ -231,18 +206,14 @@ struct AccountApiOperation {
             self.query = query
         }
         
-        var path: String {
-            switch moduleType {
-            case .reouseces:
-                return "/accounts/\(address.toString())/resources"
-            case .modules:
-                return "/accounts/\(address.toString())/modules"
-            }
-        }
-        var query: [String : Encodable]? = nil
     }
     
     enum GetAccount: RequestOptions {
+        
+        case info(AccountAddress, ledgerVersion: String? = nil)
+        case resource(AccountAddress, resourceType: MoveStructTag, ledgerVersion: String? = nil)
+        case module(AccountAddress, moduleName: MoveStructTag, ledgerVersion: String? = nil)
+        
         var path: String {
             switch self {
             case .info(let address, _):
@@ -257,28 +228,15 @@ struct AccountApiOperation {
         
         var query: [String : Encodable]? {
             switch self {
-            case .info(_, let ledgerVersion):
-                if let version = ledgerVersion {
-                    return ["ledger_version": ledgerVersion]
-                }
-                return nil
-            case .resource(_, let type, let ledgerVersion):
+            case .info(_, let ledgerVersion),
+                    .resource(_, _, let ledgerVersion),
+                    .module(_, _, let ledgerVersion):
                 var query: [String: Encodable] = [:]
                 if let version = ledgerVersion {
                     query["ledger_version"] = ledgerVersion
                 }
-                return query
-            case .module(_, let name, let ledgerVersion):
-                var query: [String: Encodable] = [:]
-                if let version = ledgerVersion {
-                    query["ledger_version"] = ledgerVersion
-                }
-                return query
+                return ["ledger_version": ledgerVersion]
             }
         }
-        
-        case info(AccountAddress, ledgerVersion: String? = nil)
-        case resource(AccountAddress, resourceType: MoveStructTag, ledgerVersion: String? = nil)
-        case module(AccountAddress, moduleName: MoveStructTag, ledgerVersion: String? = nil)
     }
 }

@@ -4,7 +4,34 @@ import Foundation
 import HTTPTypes
 import OpenAPIURLSession
 
-package protocol Convertible {
+public enum ParameterStyle: Sendable {
+    /// The form style.
+    ///
+    /// Details: https://datatracker.ietf.org/doc/html/rfc6570#section-3.2.8
+    case form
+
+    /// The simple style.
+    ///
+    /// Details: https://datatracker.ietf.org/doc/html/rfc6570#section-3.2.2
+    case simple
+    /// The deepObject style.
+    ///
+    /// Details: https://spec.openapis.org/oas/v3.1.0.html#style-values
+    case deepObject
+    
+    var convertToOpenAPI: OpenAPIRuntime.ParameterStyle {
+        switch self {
+        case .form:
+            return .form
+        case .simple:
+            return .simple
+        case .deepObject:
+            return .deepObject
+        }
+    }
+}
+
+public protocol Convertible {
     func setQueryItemAsURI<T: Encodable>(
         in request: inout HTTPRequest,
         style: ParameterStyle?,
@@ -38,7 +65,11 @@ package protocol Convertible {
     ) async throws -> C
 }
 
-extension Converter: Convertible {}
+extension Converter: Convertible {
+    public func setQueryItemAsURI<T>(in request: inout HTTPRequest, style: ParameterStyle?, explode: Bool?, name: String, value: T?) throws where T : Encodable {
+        return try setQueryItemAsURI(in: &request, style: style?.convertToOpenAPI, explode: explode, name: name, value: value)
+    }
+}
 
 package protocol RequestSerializable: Sendable {
     func serializer(with converter: Convertible) throws -> (HTTPRequest, HTTPBody?)
@@ -132,7 +163,7 @@ package enum RequestBody {
     case binary(HTTPBody)
 }
 
-package protocol ClientInterface {
+public protocol ClientInterface {
     var serverURL: Foundation.URL {get}
     var converter: Convertible {get}
     
@@ -153,7 +184,7 @@ package protocol ClientInterface {
 public struct Client: ClientInterface {
     
     public var serverURL: URL
-    package var converter: Convertible {
+    public var converter: Convertible {
         return client.converter
     }
     private let client: UniversalClient
@@ -173,7 +204,7 @@ public struct Client: ClientInterface {
         )
     }
     
-    package func send<Input, Output>(
+    public func send<Input, Output>(
         input: Input,
         serializer: @Sendable (Input) throws -> (HTTPRequest, HTTPBody?),
         deserializer: @Sendable (HTTPResponse, HTTPBody?) async throws -> Output
