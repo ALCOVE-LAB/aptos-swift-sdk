@@ -14,7 +14,7 @@ public struct FailedTransactionError: Error {
     public var lastTxn: TransactionResponse?
 }
 
-public protocol TransactionAPIProtocol: Sendable {
+public protocol TransactionAPIProtocol {
     func getTransactions(page: Pagination?) async throws -> [TransactionResponse]
         
     func getTransactionByHash(_ transactionHash: HexInput) async throws -> TransactionResponse
@@ -190,7 +190,7 @@ struct TransactionApiOperation {
             self.query = query
         }
         
-        var query: [String : Encodable]?
+        var query: Parameter?
         
         var path: String {
             return "/transactions"

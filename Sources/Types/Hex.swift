@@ -1,20 +1,20 @@
 
 import Foundation
 
-public enum HexInvalidReason: String {
+public enum HexInvalidReason: String, Sendable {
     case tooShort = "too_short"
     case invalidLength = "invalid_length"
     case invalidHexChars = "invalid_hex_chars"
 }
 
-public enum HexInput {
+public enum HexInput: Sendable {
     case string(String)
     case data(Data)
     case array([UInt8])
     case num(Int) // 0xFF, 0x01
 }
 
-public struct Hex {
+public struct Hex: Sendable {
     private let data: Data
 
     public init(data: Data) {

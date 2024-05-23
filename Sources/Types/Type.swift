@@ -31,16 +31,8 @@ extension Serializable {
 public struct AccountData: Codable, Hashable, Sendable {
     
     public var sequenceNumber: String
-    
     public var authenticationKey: String
     
-    public init(
-        sequence_number: String,
-        authentication_key: String
-    ) {
-        self.sequenceNumber = sequence_number
-        self.authenticationKey = authentication_key
-    }
     public enum CodingKeys: String, CodingKey {
         case sequenceNumber = "sequence_number"
         case authenticationKey = "authentication_key"
@@ -204,7 +196,7 @@ public enum TransactionResponse: Codable, Sendable {
             value.success
         case .genesisTransaction(let value):
             value.success
-        case .pendingTransaction(let value):
+        case .pendingTransaction(_):
             false
         case .stateCheckpointTransaction(let value):
             value.success
@@ -223,7 +215,7 @@ public enum TransactionResponse: Codable, Sendable {
             value.vmStatus
         case .genesisTransaction(let value):
             value.vmStatus
-        case .pendingTransaction(let value):
+        case .pendingTransaction(_):
             ""
         case .stateCheckpointTransaction(let value):
             value.vmStatus

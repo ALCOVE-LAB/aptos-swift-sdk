@@ -6,16 +6,16 @@ import Foundation
 import HTTPTypes
 import OpenAPIURLSession
 
-public struct Aptos {
+public struct Aptos: Sendable {
     public static func hello() {
         print("Hello from Aptos!")
     }
     
-    let aptosConfig: AptosConfig
-    let account: Account
-    let transaction: Transaction
+    public let aptosConfig: AptosConfig
+    public let account: Account
+    public let transaction: Transaction
     
-    init(aptosConfig: AptosConfig) {
+    public init(aptosConfig: AptosConfig) {
         self.aptosConfig = aptosConfig
         self.account = .init(config: aptosConfig)
         self.transaction = .init(config: aptosConfig)
@@ -24,31 +24,31 @@ public struct Aptos {
 
 public typealias ClientHeadersType = [String:String]
 
-public struct ClientConfig {
+public struct ClientConfig: Sendable {
     public var HEADERS: ClientHeadersType
     public var WITH_CREDENTIALS: Bool?
     public var API_KEY: String?
 }
 
-public struct FaucetConfig {
+public struct FaucetConfig: Sendable {
     public var HEADERS: ClientHeadersType
     public var AUTH_TOKEN: String?
 }
 
 
-public struct AptosConfig {
+public struct AptosConfig: Sendable {
     public let network: Network
     
     private let clientMiddleware: any ClientMiddleware
     private let _client: any ClientInterface
     
     public init(
-        network: Network,
+        network: Network = .init(),
         transprot: any ClientTransport = URLSessionTransport(),
-        clientConfig: ClientConfig?,
-        fullnodeConfig: ClientHeadersType?,
-        indexerConfig: ClientHeadersType?,
-        faucetConfig: FaucetConfig?
+        clientConfig: ClientConfig? = nil,
+        fullnodeConfig: ClientHeadersType? = nil,
+        indexerConfig: ClientHeadersType? = nil,
+        faucetConfig: FaucetConfig? = nil
     ) {
         self.network = network
         
@@ -212,5 +212,5 @@ public typealias Pagination = (offset: String, limit: Int)
 
 protocol PagenationRequest {
     var page: Pagination? { get }
-    var query: [String: Encodable]? {set get}
+    var query: Parameter? {set get}
 }

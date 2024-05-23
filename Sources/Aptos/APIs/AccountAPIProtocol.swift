@@ -3,7 +3,7 @@ import Clients
 import Types
 import HTTPTypes
 
-public protocol AccountAPIProtocol: Sendable {}
+public protocol AccountAPIProtocol {}
 
 public extension AccountAPIProtocol where Self: AptosCapability {
     func getAccountInfo(
@@ -122,7 +122,6 @@ public extension AccountAPIProtocol where Self: AptosCapability {
     }
 }
 
-
 struct AccountApiOperation {
     struct GetAccountPage: RequestOptions, PagenationRequest {
         
@@ -182,7 +181,7 @@ struct AccountApiOperation {
                 return "/accounts/\(address.toString())/transactions"
             }
         }
-        var query: [String : Encodable]?
+        var query: Parameter?
         
         private init(
             moduleType: ModuleType,
@@ -197,7 +196,7 @@ struct AccountApiOperation {
             
             var query: [String: Encodable] = [:]
             if let version = ledgerVersion {
-                query["ledger_version"] = ledgerVersion
+                query["ledger_version"] = version
             }
             if let page = page {
                 query["start"] = page.offset
@@ -233,9 +232,9 @@ struct AccountApiOperation {
                     .module(_, _, let ledgerVersion):
                 var query: [String: Encodable] = [:]
                 if let version = ledgerVersion {
-                    query["ledger_version"] = ledgerVersion
+                    query["ledger_version"] = version
                 }
-                return ["ledger_version": ledgerVersion]
+                return query
             }
         }
     }

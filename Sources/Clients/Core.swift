@@ -75,10 +75,13 @@ package protocol RequestSerializable: Sendable {
     func serializer(with converter: Convertible) throws -> (HTTPRequest, HTTPBody?)
 }
 
+package typealias Parameter = [String: any Encodable & Sendable]
+
 package protocol _RequestOptions: Sendable {
+
     var path: String {get}
     
-    var query: [String: Encodable]? { get }
+    var query: Parameter? { get }
     
     var contentType: MimeType { get }
     
@@ -88,8 +91,7 @@ package protocol _RequestOptions: Sendable {
 }
 
 package extension _RequestOptions {
-    
-    var params: [String: Encodable]? {
+    var query: Parameter? {
         return nil
     }
     
@@ -107,20 +109,20 @@ package extension _RequestOptions {
 
 package extension _RequestOptions {
     func serializer(with converter: Convertible) throws -> (HTTPRequest, HTTPBody?) {
-        var request: HTTPTypes.HTTPRequest = .init(soar_path: path, method: .get, headerFields: headers ?? .init())
-
+        let method: HTTPRequest.Method
         switch self {
         case is RequestOptions:
-            fallthrough
+            method = .get
         case is PostRequestOptions:
-            request.method = .post
+            method = .post
         default:
             preconditionFailure("Unsupported type: \(type(of: self))")
         }
+        var request: HTTPTypes.HTTPRequest = .init(soar_path: path, method: method, headerFields: headers ?? .init())
+
+        converter.setAcceptHeader(in: &request.headerFields, contentTypes: [.init(contentType: acceptType)])
         
-        try converter.setAcceptHeader(in: &request.headerFields, contentTypes: [.init(contentType: acceptType)])
-        
-        try params?.map({ (key, value) in
+        try query?.forEach({ (key, value) in
             try converter.setQueryItemAsURI(in: &request, style: .form, explode: true, name: key, value: value)
         })
         
@@ -159,11 +161,11 @@ package extension PostRequestOptions {
 
 package enum RequestBody {
     case json([String: Any])
-    case codable(Encodable)
+    case codable(any Encodable & Sendable)
     case binary(HTTPBody)
 }
 
-public protocol ClientInterface {
+public protocol ClientInterface: Sendable {
     var serverURL: Foundation.URL {get}
     var converter: Convertible {get}
     

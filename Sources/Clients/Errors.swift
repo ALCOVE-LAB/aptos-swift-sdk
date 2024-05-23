@@ -100,14 +100,17 @@ extension AptosApiError {
 }
 
 extension AptosApiError: CustomStringConvertible {
-    
+    var vmErrorCodeStr: String? {
+        guard let vmErrorCode = body.vmErrorCode else { return nil }
+        return "\(vmErrorCode)"
+    }
     /// A human-readable description of the api error.
     ///
     /// This computed property returns a string that includes information about the aptos api error.
     ///
     /// - Returns: A string describing the aptos api error and its associated details.
     public var description: String {
-        "Aptos error - message: '\(body.message)', errCode: '\(String(describing: body.errorCode))', vmErrorCode: '\(body.vmErrorCode)', requestOptions: \(String(describing: requestOptions)), request: \(request?.prettyDescription ?? "<nil>"), requestBody: \(requestBody?.prettyDescription ?? "<nil>"), baseURL: \(baseURL?.absoluteString ?? "<nil>"), response: \(response?.prettyDescription ?? "<nil>"), responseBody: \(responseBody?.prettyDescription ?? "<nil>")"
+        "Aptos error - message: '\(body.message)', errCode: '\(body.errorCode)', vmErrorCode: '\(vmErrorCodeStr ?? "<nill>")', requestOptions: \(String(describing: requestOptions)), request: \(request?.prettyDescription ?? "<nil>"), requestBody: \(requestBody?.prettyDescription ?? "<nil>"), baseURL: \(baseURL?.absoluteString ?? "<nil>"), response: \(response?.prettyDescription ?? "<nil>"), responseBody: \(responseBody?.prettyDescription ?? "<nil>")"
     }
 }
 

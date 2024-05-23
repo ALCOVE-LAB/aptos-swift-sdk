@@ -1,7 +1,6 @@
 import Foundation
 
-
-public enum AptosApiEnv {
+public enum AptosApiEnv: Sendable {
     case mainnet
     case testnet
     case devnet
@@ -61,13 +60,13 @@ public enum AptosApiEnv {
     }
 }
 
-public enum AptosApiType {
+public enum AptosApiType: Sendable {
     case fullNode
     case indexer
     case faucet
 }
 
-public struct Network {
+public struct Network: Sendable {
     
     public let apiEnv: AptosApiEnv
     public let apiType: AptosApiType
@@ -76,11 +75,11 @@ public struct Network {
         apiEnv: AptosApiEnv,
         apiType: AptosApiType = .fullNode
     ) -> Network {
-        var config = self.init(apiEnv: apiEnv, apiType: apiType)
+        let config = self.init(apiEnv: apiEnv, apiType: apiType)
         return config
     }
     
-    public init(apiEnv: AptosApiEnv, apiType: AptosApiType) {
+    public init(apiEnv: AptosApiEnv = .devnet, apiType: AptosApiType = .fullNode) {
         self.apiEnv = apiEnv
         self.apiType = apiType
     }

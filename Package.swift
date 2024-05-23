@@ -71,16 +71,25 @@ let package = Package(
         ),
         // MARK: - TestTargets
         .testTarget(
-            name: "AptosTests",
+            name: "UnitTests",
             dependencies: [
-                "Aptos",
                 "BCS",
                 "Types",
-                "Core",
-                "Utils",
+            ]
+        ),
+        .testTarget(
+            name: "ClientTests",
+            dependencies: [
+                "Clients",
+            ]
+        ),
+        .testTarget(
+            name: "E2ETests",
+            dependencies: [
+                "Aptos",
+                "Types",
                 "Clients"
-            ],
-            path: "Tests"
+            ]
         )
     ],
     swiftLanguageVersions: [.v5]

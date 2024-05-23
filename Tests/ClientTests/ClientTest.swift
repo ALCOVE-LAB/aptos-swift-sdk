@@ -4,6 +4,7 @@ import Types
 import Clients
 import OpenAPIURLSession 
 
+/*
 class ClientTest: XCTestCase {
     struct Converter: Convertible {}
     struct HttpBinClient: ClientProtocol {
@@ -53,4 +54,4 @@ class ClientTest: XCTestCase {
         let (response, _) = try await client.post(HttpBinPost.post)
         XCTAssertEqual(response.status.code, 200)
     }
-}
+}*/

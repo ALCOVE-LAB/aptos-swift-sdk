@@ -1,7 +1,7 @@
 import Foundation
 import BCS
 
-public enum AddressInvalidReason: String {
+public enum AddressInvalidReason: String, Sendable {
     case incorrectNumberOfBytes = "incorrect_number_of_bytes"
     case invalidHexChars = "invalid_hex_chars"
     case tooShort = "too_short"
@@ -20,7 +20,7 @@ extension AccountAddress: AccountAddressInput {}
 extension Data: AccountAddressInput {}
 
 
-public struct AccountAddress: Serializable, Deserializable {
+public struct AccountAddress: Sendable, Serializable, Deserializable {
 
     public static let LENGTH: Int = 32
     public static let LONG_STRING_LENGTH: Int = 64

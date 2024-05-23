@@ -1,10 +1,10 @@
 
 import Foundation
 
-struct Account: AptosCapability, AccountAPIProtocol {
-    var config: AptosConfig
+public struct Account: Sendable, AptosCapability, AccountAPIProtocol {
+    public var config: AptosConfig
     
-    init(config: AptosConfig) {
+    public init(config: AptosConfig) {
         self.config = config
     }
 }
