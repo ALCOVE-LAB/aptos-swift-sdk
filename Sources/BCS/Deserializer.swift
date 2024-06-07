@@ -3,9 +3,8 @@ import Foundation
 public enum DeserializationError: Error {
   case invalidInput(issue: String)
 }
-public protocol Deserializable<T> {
-  associatedtype T
-  static func deserialize(deserializer: Deserializer) throws -> T
+public protocol Deserializable {
+  static func deserialize(deserializer: Deserializer) throws -> Self
 }
 
 public protocol Deserializer {
@@ -40,11 +39,11 @@ public protocol Deserializer {
 }
 
 public extension Deserializer {
-  func deserialize<T>(_ value: any Deserializable<T>.Type) throws -> T {
+  func deserialize<T>(_ value: T.Type) throws -> T where T: Deserializable {
       return try value.deserialize(deserializer: self)
   }
 
-  func deserializeVector<T>(_ value: any Deserializable<T>.Type) throws -> Array<T> {
+  func deserializeVector<T>(_ value:  T.Type) throws -> Array<T> where T: Deserializable {
       let length = try deserializeVariantIndex()
       var vector = Array<T>()
       for _ in 0 ..< length {

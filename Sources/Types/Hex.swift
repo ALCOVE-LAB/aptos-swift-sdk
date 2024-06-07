@@ -7,12 +7,12 @@ public enum HexInvalidReason: String, Sendable {
     case invalidHexChars = "invalid_hex_chars"
 }
 
-public enum HexInput: Sendable {
-    case string(String)
-    case data(Data)
-    case array([UInt8])
-    case num(Int) // 0xFF, 0x01
-}
+public protocol HexInput: Sendable, AccountAddressInput {}
+extension String: HexInput {}
+extension Data: HexInput {}
+extension Array: HexInput where Element == UInt8 {}
+// 0x1234
+extension Int: HexInput {} 
 
 public struct Hex: Sendable {
     private let data: Data
@@ -61,14 +61,16 @@ public struct Hex: Sendable {
 
     public static func fromHexInput(_ hexInput: HexInput) throws -> Hex {
         switch hexInput {
-        case .string(let str):
+        case let str as String:
             return try Hex.fromHexString(str)
-        case .data(let data):
+        case let data as Data:
             return Hex(data: data)
-        case .array(let array):
+        case let array as [UInt8]:
             return Hex(data: array)
-        case .num(let num):
+        case let num as Int:
             return try Hex.fromHexString(String(format: "0x%02X", num))
+        default:
+            throw ParsingError<HexInvalidReason>(message: "Invalid hex input type", reason: .invalidHexChars)
         }
     }
 

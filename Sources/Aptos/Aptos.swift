@@ -12,7 +12,7 @@ public struct Aptos: Sendable {
     }
     
     public let aptosConfig: AptosConfig
-    public let account: Account
+    public let account: AccountApi
     public let transaction: Transaction
     
     public init(aptosConfig: AptosConfig) {
@@ -144,7 +144,7 @@ extension AptosCapability {
 
 
 extension ClientInterface {
-    private func sendRequest<Body>(_ request: any _RequestOptions) async throws -> AptosResponse<Body> where Body: Decodable {
+    public func sendRequest<Body>(_ request: any _RequestOptions) async throws -> AptosResponse<Body> where Body: Decodable {
         return try await send(input: request) { input in
             return try input.serializer(with: converter)
         } deserializer: { resp, httpBody in

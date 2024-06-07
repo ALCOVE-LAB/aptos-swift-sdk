@@ -71,13 +71,13 @@ extension Converter: Convertible {
     }
 }
 
-package protocol RequestSerializable: Sendable {
+public protocol RequestSerializable: Sendable {
     func serializer(with converter: Convertible) throws -> (HTTPRequest, HTTPBody?)
 }
 
-package typealias Parameter = [String: any Encodable & Sendable]
+public typealias Parameter = [String: any Encodable & Sendable]
 
-package protocol _RequestOptions: Sendable {
+public protocol _RequestOptions: Sendable {
 
     var path: String {get}
     
@@ -149,17 +149,17 @@ package extension _RequestOptions {
     
 }
 
-package protocol RequestOptions: RequestSerializable, _RequestOptions {}
+public protocol RequestOptions: RequestSerializable, _RequestOptions {}
 
-package protocol PostRequestOptions: _RequestOptions, RequestSerializable {
+public protocol PostRequestOptions: _RequestOptions, RequestSerializable {
     var body: RequestBody? { get }
 }
 
-package extension PostRequestOptions {
+public extension PostRequestOptions {
     var body: RequestBody? { nil }
 }
 
-package enum RequestBody {
+public enum RequestBody {
     case json([String: Any])
     case codable(any Encodable & Sendable)
     case binary(HTTPBody)
@@ -223,7 +223,7 @@ public struct Client: ClientInterface {
     }
 }
 
-package enum MimeType: String, AcceptableProtocol {
+public enum MimeType: String, AcceptableProtocol {
     case json = "application/json"
     case bcs = "application/x-bcs"
     case bcsSignedTransaction = "application/x.aptos.signed_transaction+bcs"
@@ -243,39 +243,39 @@ extension HTTPField.Name {
     }
 }
 
-package struct AptosResponse<T> {
-    package var requestOptions: any Sendable
+public struct AptosResponse<T> {
+    public var requestOptions: any Sendable
     
     /// The HTTP request created during the operation.
     ///
     /// Will be nil if the error resulted before the request was generated,
     /// for example if generating the request from the Input failed.
-    package var request: HTTPRequest?
+    public var request: HTTPRequest?
     
     /// The HTTP request body created during the operation.
     ///
     /// Will be nil if the error resulted before the request was generated,
     /// for example if generating the request from the Input failed.
-    package var requestBody: HTTPBody?
+    public var requestBody: HTTPBody?
     
     /// The base URL for HTTP requests.
     ///
     /// Will be nil if the error resulted before the request was generated,
     /// for example if generating the request from the Input failed.
-    package var baseURL: URL?
+    public var baseURL: URL?
     
-    package var body: T
+    public var body: T
     /// The HTTP response received during the operation.
     ///
     /// Will be nil if the error resulted before the response was received.
-    package var response: HTTPResponse?
+    public var response: HTTPResponse?
     
     /// The HTTP response body received during the operation.
     ///
     /// Will be nil if the error resulted before the response was received.
-    package var responseBody: HTTPBody?
+    public var responseBody: HTTPBody?
     
-    package init(requestOptions: any Sendable, request: HTTPRequest? = nil, requestBody: HTTPBody? = nil, baseURL: URL? = nil, body: T, response: HTTPResponse? = nil, responseBody: HTTPBody? = nil) {
+    public init(requestOptions: any Sendable, request: HTTPRequest? = nil, requestBody: HTTPBody? = nil, baseURL: URL? = nil, body: T, response: HTTPResponse? = nil, responseBody: HTTPBody? = nil) {
         self.requestOptions = requestOptions
         self.request = request
         self.requestBody = requestBody
@@ -286,7 +286,7 @@ package struct AptosResponse<T> {
     }
 }
 
-package extension AptosResponse {
+public extension AptosResponse {
     var status: Int {
         return response?.status.code ?? 0
     }

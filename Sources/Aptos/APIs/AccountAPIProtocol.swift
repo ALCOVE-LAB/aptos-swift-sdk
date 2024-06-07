@@ -6,25 +6,13 @@ import HTTPTypes
 public protocol AccountAPIProtocol {}
 
 public extension AccountAPIProtocol where Self: AptosCapability {
-    func getAccountInfo(
-        address: HexInput,
-        ledgerVersion: String? = nil) async throws -> AccountData {
-        let hex = try Hex.fromHexInput(address)
-        return try await self.getAccountInfo(address: AccountAddress.from(hex.toString()), ledgerVersion: ledgerVersion)
-    }
+   
     func getAccountInfo(
         address: AccountAddressInput,
         ledgerVersion: String? = nil) async throws -> AccountData {
             return try await client.get(AccountApiOperation.GetAccount.info(AccountAddress.from(address))).body
     }
     
-
-    func getAccountResources(
-        address: HexInput, ledgerVersion: String? = nil,
-        page: Pagination? = nil) async throws -> [MoveResource] {
-        let hex = try Hex.fromHexInput(address)
-        return try await self.getAccountResources(address: AccountAddress.from(hex.toString()), ledgerVersion: ledgerVersion, page: page)
-    }
     func getAccountResources(
         address: AccountAddressInput,
         ledgerVersion: String? = nil,
@@ -36,41 +24,34 @@ public extension AccountAPIProtocol where Self: AptosCapability {
             return try await client.sendPaginateRequest(&request).body
     }
     
-    
-    func getAccountResource(
-        address: HexInput, resourceType: MoveStructTag, ledgerVersion: String? = nil
-    ) async throws -> MoveResource {
-        let hex = try Hex.fromHexInput(address)
-        return try await self.getAccountResource(
-            address: AccountAddress.from(hex.toString()),
-            resourceType: resourceType,
-            ledgerVersion: ledgerVersion)
-    }
     func getAccountResource(
         address: AccountAddressInput,
         resourceType: MoveStructTag,
         ledgerVersion: String? = nil
-    ) async throws -> MoveResource {
+    ) async throws -> MoveStructValue {
         let request: RequestOptions = AccountApiOperation.GetAccount.resource(
             try AccountAddress.from(address),
             resourceType: resourceType,
             ledgerVersion: ledgerVersion
         )
-        return try await client.get(request).body
+        let resource: MoveResource = try await client.get(request).body
+        return resource.data
     }
     
-    
-    func getAccountModules(
-        address: HexInput,
-        ledgerVersion: String? = nil,
-        page: Pagination? = nil) async throws -> [MoveModuleBytecode] {
-        let hex = try Hex.fromHexInput(address)
-        return try await self.getAccountModules(
-            address: AccountAddress.from(hex.toString()),
-            ledgerVersion: ledgerVersion,
-            page: page
+    func getAccountResource<Value: Codable & Sendable>(
+        address: AccountAddressInput,
+        resourceType: MoveStructTag,
+        ledgerVersion: String? = nil
+    ) async throws -> Value {
+        let request: RequestOptions = AccountApiOperation.GetAccount.resource(
+            try AccountAddress.from(address),
+            resourceType: resourceType,
+            ledgerVersion: ledgerVersion
         )
+        let resource: MoveResourceParser<Value> = try await client.get(request).body
+        return resource.data
     }
+    
     func getAccountModules(
         address: AccountAddressInput,
         ledgerVersion: String? = nil,
@@ -83,15 +64,6 @@ public extension AccountAPIProtocol where Self: AptosCapability {
             return try await client.sendPaginateRequest(&request).body
     }
     
-    func getAccountModule(
-        address: HexInput, moduleName: String, ledgerVersion: String? = nil
-    ) async throws -> MoveModuleBytecode {
-        let hex = try Hex.fromHexInput(address)
-        return try await self.getAccountModule(
-            address: AccountAddress.from(hex.toString()),
-            moduleName: moduleName,
-            ledgerVersion: ledgerVersion)
-    }
     func getAccountModule(
         address: AccountAddressInput,
         moduleName: String,
@@ -106,14 +78,6 @@ public extension AccountAPIProtocol where Self: AptosCapability {
         return try await client.get(request).body
     }
     
-    
-    func getAccountTransactions(address: HexInput, page: Pagination? = nil) async throws -> [TransactionResponse] {
-        let hex = try Hex.fromHexInput(address)
-        return try await self.getAccountTransactions(
-            address: AccountAddress.from(hex.toString()),
-            page: page
-        )
-    }
     func getAccountTransactions(address: AccountAddressInput, page: Pagination? = nil) async throws -> [TransactionResponse] {
         var request: PagenationRequest & RequestOptions =
         AccountApiOperation.GetAccountPage.transactions(

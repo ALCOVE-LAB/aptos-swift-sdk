@@ -1,7 +1,8 @@
 
 import Foundation
 
-public struct Account: Sendable, AptosCapability, AccountAPIProtocol {
+
+public struct AccountApi: Sendable, AptosCapability, AccountAPIProtocol {
     public var config: AptosConfig
     
     public init(config: AptosConfig) {

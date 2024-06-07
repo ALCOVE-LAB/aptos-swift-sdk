@@ -78,6 +78,16 @@ public struct MoveResource: Codable, Hashable, Sendable {
     }
 }
 
+public struct MoveResourceParser<Data: Codable & Sendable>: Codable, Sendable {
+    public var type: MoveStructTag
+    public var data: Data
+    
+    public enum CodingKeys: String, CodingKey {
+        case type = "type"
+        case data
+    }
+}
+
 
 public struct MoveModuleBytecode: Codable, Hashable, Sendable {
     public var bytecode: String
@@ -1067,63 +1077,116 @@ public enum TransactionSignature: Codable, Hashable, Sendable {
             try value.encode(to: encoder)
         }
     }
-}
 
-/// A single Ed25519 signature
-public struct Ed25519Signature: Codable, Hashable, Sendable {
-    
-    public var publicKey: HexEncodedBytes
-    
-    public var signature: HexEncodedBytes
-    
-    public enum CodingKeys: String, CodingKey {
-        case publicKey = "public_key"
-        case signature
+
+    /// A single Ed25519 signature
+    public struct Ed25519Signature: Codable, Hashable, Sendable {
+        
+        public var publicKey: HexEncodedBytes
+        
+        public var signature: HexEncodedBytes
+        
+        public enum CodingKeys: String, CodingKey {
+            case publicKey = "public_key"
+            case signature
+        }
     }
-}
 
-/// Fee payer signature for fee payer transactions
-///
-/// This allows you to have transactions across multiple accounts and with a fee payer
-public struct FeePayerSignature: Codable, Hashable, Sendable {
-    
-    public var sender: AccountSignature
-    /// The other involved parties' addresses
-    public var secondarySignerAddresses: [String]
-    /// The associated signatures, in the same order as the secondary addresses
-    public var secondarySigners: [AccountSignature]
-    
-    public var feePayerAddress: String
-    
-    public var feePayerSigner: AccountSignature
-    
-    public enum CodingKeys: String, CodingKey {
-        case sender
-        case secondarySignerAddresses = "secondary_signer_addresses"
-        case secondarySigners = "secondary_signers"
-        case feePayerAddress = "fee_payer_address"
-        case feePayerSigner = "fee_payer_signer"
-    }
-}
-
-/// Multi agent signature for multi agent transactions
-///
-/// This allows you to have transactions across multiple accounts
-public struct MultiAgentSignature: Codable, Hashable, Sendable {
-    public var sender: AccountSignature
-    /// The other involved parties' addresses
-    public var secondarySignerAddresses: [String]
-    /// The associated signatures, in the same order as the secondary addresses
+    /// Fee payer signature for fee payer transactions
     ///
-    /// - Remark: Generated from `#/components/schemas/MultiAgentSignature/secondary_signers`.
-    public var secondarySigners: [AccountSignature]
-    
-    public enum CodingKeys: String, CodingKey {
-        case sender
-        case secondarySignerAddresses = "secondary_signer_addresses"
-        case secondarySigners = "secondary_signers"
+    /// This allows you to have transactions across multiple accounts and with a fee payer
+    public struct FeePayerSignature: Codable, Hashable, Sendable {
+        
+        public var sender: AccountSignature
+        /// The other involved parties' addresses
+        public var secondarySignerAddresses: [String]
+        /// The associated signatures, in the same order as the secondary addresses
+        public var secondarySigners: [AccountSignature]
+        
+        public var feePayerAddress: String
+        
+        public var feePayerSigner: AccountSignature
+        
+        public enum CodingKeys: String, CodingKey {
+            case sender
+            case secondarySignerAddresses = "secondary_signer_addresses"
+            case secondarySigners = "secondary_signers"
+            case feePayerAddress = "fee_payer_address"
+            case feePayerSigner = "fee_payer_signer"
+        }
+    }
+
+    /// Multi agent signature for multi agent transactions
+    ///
+    /// This allows you to have transactions across multiple accounts
+    public struct MultiAgentSignature: Codable, Hashable, Sendable {
+        public var sender: AccountSignature
+        /// The other involved parties' addresses
+        public var secondarySignerAddresses: [String]
+        /// The associated signatures, in the same order as the secondary addresses
+        ///
+        /// - Remark: Generated from `#/components/schemas/MultiAgentSignature/secondary_signers`.
+        public var secondarySigners: [AccountSignature]
+        
+        public enum CodingKeys: String, CodingKey {
+            case sender
+            case secondarySignerAddresses = "secondary_signer_addresses"
+            case secondarySigners = "secondary_signers"
+        }
+    }
+
+    /// A Ed25519 multi-sig signature
+    ///
+    /// This allows k-of-n signing for a transaction
+    public struct MultiEd25519Signature: Codable, Hashable, Sendable {
+        /// The public keys for the Ed25519 signature
+        public var publicKeys: [HexEncodedBytes]
+        /// Signature associated with the public keys in the same order
+        public var signatures: [HexEncodedBytes]
+        /// The number of signatures required for a successful transaction
+        public var threshold: Int
+        public var bitmap: HexEncodedBytes
+        
+        public enum CodingKeys: String, CodingKey {
+            case publicKeys = "public_keys"
+            case signatures
+            case threshold
+            case bitmap
+        }
+    }
+
+    /// A multi key signature
+    public struct MultiKeySignature: Codable, Hashable, Sendable {
+        public var signatures: [IndexedSignature]
+        public var signaturesRequired: Int
+        
+        public enum CodingKeys: String, CodingKey {
+            case signatures
+            case signaturesRequired = "signatures_required"
+        }
+    }
+
+
+    /// A single key signature
+    public struct SingleKeySignature: Codable, Hashable, Sendable {
+        
+        public var publicKey: HexEncodedBytes
+        public var signature: HexEncodedBytes
+        
+        public enum CodingKeys: String, CodingKey {
+            case publicKey = "public_key"
+            case signature
+        }
+    }
+
+    public struct IndexedSignature: Codable, Hashable, Sendable {
+        public var index: Int
+        public enum CodingKeys: String, CodingKey {
+            case index
+        }
     }
 }
+
 
 /// Account signature scheme
 ///
@@ -1133,10 +1196,10 @@ public struct MultiAgentSignature: Codable, Hashable, Sendable {
 /// 2. A k-of-n multi-Ed25519 key account, multiple private keys, such that k-of-n must sign a transaction.
 /// 3. A single Secp256k1Ecdsa key account, one private key
 public enum AccountSignature: Codable, Hashable, Sendable {
-    case ed25519(Ed25519Signature)
-    case multiEd25519(MultiEd25519Signature)
-    case multiKey(MultiKeySignature)
-    case singleKey(SingleKeySignature)
+    case ed25519(TransactionSignature.Ed25519Signature)
+    case multiEd25519(TransactionSignature.MultiEd25519Signature)
+    case multiKey(TransactionSignature.MultiKeySignature)
+    case singleKey(TransactionSignature.SingleKeySignature)
     
     public enum CodingKeys: String, CodingKey {
         case _type = "type"
@@ -1178,55 +1241,6 @@ public enum AccountSignature: Codable, Hashable, Sendable {
     }
 }
 
-/// A Ed25519 multi-sig signature
-///
-/// This allows k-of-n signing for a transaction
-public struct MultiEd25519Signature: Codable, Hashable, Sendable {
-    /// The public keys for the Ed25519 signature
-    public var publicKeys: [HexEncodedBytes]
-    /// Signature associated with the public keys in the same order
-    public var signatures: [HexEncodedBytes]
-    /// The number of signatures required for a successful transaction
-    public var threshold: Int
-    public var bitmap: HexEncodedBytes
-    
-    public enum CodingKeys: String, CodingKey {
-        case publicKeys = "public_keys"
-        case signatures
-        case threshold
-        case bitmap
-    }
-}
-
-/// A multi key signature
-public struct MultiKeySignature: Codable, Hashable, Sendable {
-    public var signatures: [IndexedSignature]
-    public var signaturesRequired: Int
-    
-    public enum CodingKeys: String, CodingKey {
-        case signatures
-        case signaturesRequired = "signatures_required"
-    }
-}
-
-/// A single key signature
-public struct SingleKeySignature: Codable, Hashable, Sendable {
-    
-    public var publicKey: HexEncodedBytes
-    public var signature: HexEncodedBytes
-    
-    public enum CodingKeys: String, CodingKey {
-        case publicKey = "public_key"
-        case signature
-    }
-}
-
-public struct IndexedSignature: Codable, Hashable, Sendable {
-    public var index: Int
-    public enum CodingKeys: String, CodingKey {
-        case index
-    }
-}
 
 /// Struct holding the outputs of the estimate gas API
 public struct GasEstimation: Codable, Hashable, Sendable {
@@ -1242,4 +1256,45 @@ public struct GasEstimation: Codable, Hashable, Sendable {
         case gasEstimate = "gas_estimate"
         case prioritizedGasEstimate = "prioritized_gas_estimate"
     }
+}
+
+
+
+public enum AuthenticationKeyScheme {
+    case signing(SigningScheme)
+    case derive(DeriveScheme)
+
+    public var rawValue: Int {
+        switch self {
+        case .signing(let scheme):
+            return scheme.rawValue
+        case .derive(let scheme):
+            return scheme.rawValue
+        }
+    }
+}
+
+
+public enum DeriveScheme: Int {
+    /// Derives an address using an AUID, used for objects
+    case auid = 251
+    /// Derives an address from another object address
+    case object = 252
+    /// Derives an address from a GUID, used for objects
+    case guid = 253
+    /// Derives an address from seed bytes, used for named objects
+    case seed = 254
+    /// Derives an address from seed bytes, used for resource accounts
+    case resource = 255
+}
+
+public enum SigningScheme : Int {
+    /// For Ed25519PublicKey
+    case ed25519 = 0
+    /// For MultiEd25519PublicKey
+    case multiEd25519 = 1
+    /// For SingleKey ecdsa
+    case singleKey = 2
+    /// For MultiKey ecdsa
+    case multiKey = 3
 }

@@ -15,11 +15,12 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.3.0"),
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.3.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "4.0.0"),
         .package(url: "https://github.com/apple/swift-openapi-urlsession.git", from: "1.0.1"),
         .package(url: "https://github.com/apple/swift-openapi-runtime", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
-        .package(url: "https://github.com/apple/swift-http-types.git", from: "1.1.0")
+        .package(url: "https://github.com/apple/swift-http-types.git", from: "1.1.0"),
+        .package(url: "https://github.com/Electric-Coin-Company/MnemonicSwift.git", from: "2.2.4")
     ],
     targets: [
         // MARK: - Targets
@@ -57,7 +58,13 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Core"
+            name: "Core",
+            dependencies: [
+                "Types",
+                "BCS",
+                .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "MnemonicSwift", package: "MnemonicSwift"),
+            ]
         ),
         .target(
             name: "Utils"
@@ -73,6 +80,7 @@ let package = Package(
         .testTarget(
             name: "UnitTests",
             dependencies: [
+                "Core",
                 "BCS",
                 "Types",
             ]

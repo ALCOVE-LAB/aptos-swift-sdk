@@ -12,7 +12,7 @@ public enum AddressInvalidReason: String, Sendable {
     case invalidInputType = "invalid_input_type"
 }
 
-public protocol AccountAddressInput {}
+public protocol AccountAddressInput: Sendable {}
 
 extension String: AccountAddressInput {}
 extension Array: AccountAddressInput where Element == UInt8 {}

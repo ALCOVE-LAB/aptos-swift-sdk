@@ -194,16 +194,21 @@ class DeserializerTest: XCTestCase {
 
     func testDeserializesAndComposesAnBbstractDeserializableClassInstanceFromComposedDeserializeCalls() throws {
         class MoveStruct: Serializable, Deserializable {
-            static func deserialize(deserializer: BCS.Deserializer) throws -> MoveStruct {
+
+            static func deserialize(deserializer: BCS.Deserializer) throws -> Self {
+                var s: MoveStruct
                 let index = try deserializer.deserializeVariantIndex()
                 switch index {
                 case 0:
-                    return try MoveStructA.load(deserializer: deserializer)
+                s = try MoveStructA.load(deserializer: deserializer)
+                    // return try MoveStructA.load(deserializer: deserializer)
                 case 1:
-                    return try MoveStructB.load(deserializer: deserializer)
+                s =  try MoveStructB.load(deserializer: deserializer)
+                    // return try MoveStructB.load(deserializer: deserializer)
                 default:
                     throw DeserializationError.invalidInput(issue: "Invalid variant index")
                 }
+                return s as! Self
             }
             func serialize(serializer: Serializer) throws {
                 fatalError("not implemented")

@@ -44,7 +44,7 @@ class HexTest: XCTestCase {
 
    
     func testConvertsHexBytesToStringWithoutPrefix() throws {
-        let hex = try Hex.fromHexInput(.array(mockHex.bytes))
+        let hex = try Hex.fromHexInput(mockHex.bytes)
         XCTAssertEqual(hex.toStringWithoutPrefix(), mockHex.withoutPrefix)
     }
 
