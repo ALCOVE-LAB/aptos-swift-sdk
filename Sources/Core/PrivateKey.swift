@@ -6,6 +6,8 @@ public enum PrivateKeyError: Error {
     case invalidLength
     // Invalid derivation path ${path}
     case invalidDerivationPath(_ path: String)
+    // Invalid BIP44 path ${path}
+    case invalidBIP44Path(_ path: String)
 }
 
 extension PrivateKeyError: Equatable {
@@ -14,6 +16,8 @@ extension PrivateKeyError: Equatable {
         case (.invalidLength, .invalidLength):
             return true
         case (.invalidDerivationPath(let path1), .invalidDerivationPath(let path2)):
+            return path1 == path2
+        case (.invalidBIP44Path(let path1), .invalidBIP44Path(let path2)):
             return path1 == path2
         default:
             return false

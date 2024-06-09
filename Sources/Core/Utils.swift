@@ -2,6 +2,7 @@ import Foundation
 import Types
 import Crypto
 import MnemonicSwift
+import secp256k1
 
 typealias DerivedKeys = (key: [UInt8], chainCode: [UInt8])
 
@@ -22,7 +23,7 @@ func CKDPriv(keys: DerivedKeys, index: UInt32) -> DerivedKeys {
 
 func deriveKey(_ hashSeed: Data, _ data: Data) -> DerivedKeys {
     // Generate HMAC-SHA512 digest
-    var hmac = HMAC<SHA512>(key: SymmetricKey(data: hashSeed))
+    var hmac = Crypto.HMAC<SHA512>(key: SymmetricKey(data: hashSeed))
     hmac.update(data: data)    
     let digest = Data(hmac.finalize())
     let key = digest.prefix(32)
@@ -63,10 +64,23 @@ extension Curve25519 {
     }
 }
 
+extension secp256k1 {
+    static func verify(signature: [UInt8], data: [UInt8], publicKey: [UInt8]) -> Bool {
+        do {
+            let p256PublicKey = try secp256k1.Signing.PublicKey(dataRepresentation: publicKey, format: .uncompressed)
+            let signature = try secp256k1.Signing.ECDSASignature(compactRepresentation: signature)
+            return p256PublicKey.isValidSignature(signature, for: HashDigest(data))
+        } catch {
+            return false
+        }
+    }
+}
+
 // MARK: - hdKeys
 
 let APTOS_HARDENED_REGEX = "^m/44'/637'/[0-9]+'/[0-9]+'/[0-9]+'?$"
 let HARDENED_OFFSET: UInt32 = 0x80000000
+let APTOS_BIP44_REGEX = "^m/44'/637'/[0-9]+'/[0-9]+/[0-9]+$"
 
 extension String {
     func test(_ value: String) -> Bool {
@@ -78,6 +92,10 @@ extension String {
 extension String {
     func isValidHardenedPath() -> Bool {
         return APTOS_HARDENED_REGEX.test(self)
+    }
+
+    func isValidBIP44Path() -> Bool {
+        return APTOS_BIP44_REGEX.test(self)
     }
 }
 

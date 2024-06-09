@@ -11,7 +11,8 @@ let package = Package(
         .visionOS(.v1)
     ],
     products: [
-        .library(name: "Aptos", targets: ["Aptos"])
+        .library(name: "Aptos", targets: ["Aptos"]),
+        .library(name: "BIP32", targets: ["BIP32"]),
     ],
     dependencies: [
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.3.0"),
@@ -20,7 +21,9 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-openapi-runtime", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
         .package(url: "https://github.com/apple/swift-http-types.git", from: "1.1.0"),
-        .package(url: "https://github.com/Electric-Coin-Company/MnemonicSwift.git", from: "2.2.4")
+        .package(url: "https://github.com/Electric-Coin-Company/MnemonicSwift.git", from: "2.2.4"),
+        .package(url: "https://github.com/GigaBitcoin/secp256k1.swift.git", from: "0.17.0"),
+        .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", from: "1.8.2")
     ],
     targets: [
         // MARK: - Targets
@@ -62,8 +65,18 @@ let package = Package(
             dependencies: [
                 "Types",
                 "BCS",
+                "BIP32",
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "MnemonicSwift", package: "MnemonicSwift"),
+                .product(name: "secp256k1", package: "secp256k1.swift"),
+                .product(name: "CryptoSwift", package: "cryptoswift")
+            ]
+        ),
+        .target(
+            name: "BIP32",
+            dependencies: [
+                .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "secp256k1", package: "secp256k1.swift")
             ]
         ),
         .target(
