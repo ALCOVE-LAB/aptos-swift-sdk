@@ -1260,7 +1260,7 @@ public struct GasEstimation: Codable, Hashable, Sendable {
 
 
 
-public enum AuthenticationKeyScheme {
+public enum AuthenticationKeyScheme: Sendable {
     case signing(SigningScheme)
     case derive(DeriveScheme)
 
@@ -1275,7 +1275,7 @@ public enum AuthenticationKeyScheme {
 }
 
 
-public enum DeriveScheme: Int {
+public enum DeriveScheme: Int, Sendable {
     /// Derives an address using an AUID, used for objects
     case auid = 251
     /// Derives an address from another object address
@@ -1288,7 +1288,7 @@ public enum DeriveScheme: Int {
     case resource = 255
 }
 
-public enum SigningScheme : Int {
+public enum SigningScheme : Int, Sendable {
     /// For Ed25519PublicKey
     case ed25519 = 0
     /// For MultiEd25519PublicKey
@@ -1297,4 +1297,11 @@ public enum SigningScheme : Int {
     case singleKey = 2
     /// For MultiKey ecdsa
     case multiKey = 3
+}
+
+public enum SigningSchemeInput: Int, Sendable {
+  /// For Ed25519PublicKey
+  case ed25519 = 0
+    /// For Secp256k1Ecdsa
+  case secp256k1Ecdsa = 2
 }

@@ -7,20 +7,20 @@ Complete the main program architecture, and complete the basic capabilities incl
 - [x] BCS, serialize & deserialize basic data protocol
 - [x] Clients & RESTful APIs
 - [x] Account & Transaction, support read Account info and Transaction
-- [ ] Basic Unit Test
+- [x] Basic Unit Test
 - [ ] Demo, the fully demo by usage
 
 ## Milestone 2
 Complete the create Account feature and Faucet client supported.
 
-- [ ] Support Account Create
+- [x] Support Account Create
 - [ ] Faucet Client for Testnet & Devnet
 
 
 ## Milestone 3
 Complete the Writing to Chain capabilities, include crypto keys and transaction submission.
 
-- [ ] Private Keys
+- [x] Private Keys
 - [ ] Passkey & Keyless Support
 - [ ] Transaction submission
 - [ ] View functions

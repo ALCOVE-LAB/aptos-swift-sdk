@@ -52,9 +52,9 @@ public struct Secp256k1PrivateKey: PrivateKey {
         self.key = hex
     }
 
-    public static func generate() throws -> Secp256k1PrivateKey {
-        let privateKey = try secp256k1.Signing.PrivateKey(format: .uncompressed)
-        return try Secp256k1PrivateKey(privateKey.dataRepresentation)
+    public static func generate() -> Secp256k1PrivateKey {
+        let privateKey = try! secp256k1.Signing.PrivateKey(format: .uncompressed)
+        return try! Secp256k1PrivateKey(privateKey.dataRepresentation)
     }
     
     public static func fromDerivationPath(path: String, mnemonic: String) throws -> Secp256k1PrivateKey {
