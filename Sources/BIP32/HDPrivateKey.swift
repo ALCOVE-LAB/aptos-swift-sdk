@@ -2,7 +2,7 @@
 import Foundation
 import Crypto
 import secp256k1
-
+import CryptoKit
 public struct HDPrivateKey {
     public let network: Network
     public let depth: UInt8
@@ -49,44 +49,89 @@ public struct HDPrivateKey {
         if (0x80000000 & index) != 0 {
             fatalError("invalid child index")
         }
-        
-        let parentKey = HDPrivateKey(privateKey: raw, chainCode: chainCode, network: network, depth: depth, fingerprint: fingerprint, childIndex: childIndex)
-        
-        var data = Data()
-        
-        if hardened {
-            data.append(0x00)
-            data.append(parentKey.raw)
-        } else {
-            data.append(try parentKey.extendedPublicKey().raw)
+        guard let derivedKey = try _HDKey(privateKey: raw, publicKey: extendedPublicKey().raw, chainCode: chainCode, depth: depth, fingerprint: fingerprint, childIndex: childIndex).derived(at: index, hardened: hardened) else {
+            throw DerivationError.derivationFailed
         }
-        
-        var indexBytes = index.bigEndian
-        data.append(Data(bytes: &indexBytes, count: MemoryLayout.size(ofValue: indexBytes)))
-        
-        let hmac = HMAC<SHA512>.authenticationCode(for: data, using: SymmetricKey(data: parentKey.chainCode))
-        
-        let privateKey = hmac.prefix(32)
-        let chainCode = hmac.suffix(32)
-    
-        let newPrivateKey = try secp256k1.Signing.PrivateKey(dataRepresentation: Data(privateKey), format: .compressed)
-        
-        let parentPublicKey = try secp256k1.Signing.PublicKey(dataRepresentation: parentKey.extendedPublicKey().raw, format: .compressed)
-        let publicKeyHash = SHA256.hash(data: parentPublicKey.dataRepresentation)
-        let newFingerprint = UInt32(bigEndian: Data(publicKeyHash.prefix(4)).withUnsafeBytes { $0.load(as: UInt32.self) })
-        
-        return HDPrivateKey(
-            privateKey: newPrivateKey.dataRepresentation,
-            chainCode: Data(chainCode),
-            network: network,
-            depth: parentKey.depth + 1,
-            fingerprint: newFingerprint,
-            childIndex: index
-        )
+        return HDPrivateKey(privateKey: derivedKey.privateKey!, chainCode: derivedKey.chainCode, network: network, depth: derivedKey.depth, fingerprint: derivedKey.fingerprint, childIndex: derivedKey.childIndex)
     }
 }
 
 
 public enum DerivationError: Error {
     case derivationFailed
+}
+
+struct _HDKey {
+    let privateKey: Data?
+    let publicKey: Data
+    let chainCode: Data
+    let depth: UInt8
+    let fingerprint: UInt32
+    let childIndex: UInt32
+
+    private func hmacsha512(_ data: Data, key: Data) -> Data {
+        let hmac = HMAC<SHA512>.authenticationCode(for: data, using: SymmetricKey(data: key))
+        return Data(hmac)
+    }
+
+    private func sha256ripemd160(_ data: Data) -> Data {
+        let sha256Hash = SHA256.hash(data: publicKey)
+
+        var ripemd160Hash = RIPEMD160()
+        ripemd160Hash.update(data: Data(sha256Hash))
+        
+        return ripemd160Hash.finalize()
+    }
+
+    func derived(at childIndex: UInt32, hardened: Bool) -> _HDKey? {
+		var data = Data()
+		if hardened {
+			data.append(0)
+			guard let privateKey = self.privateKey else {
+				return nil
+			}
+			data.append(privateKey)
+		} else {
+			data.append(publicKey)
+		}
+		var childIndex = CFSwapInt32HostToBig(hardened ? (0x80000000 as UInt32) | childIndex : childIndex)
+		data.append(Data(bytes: &childIndex, count: MemoryLayout<UInt32>.size))
+		let digest = hmacsha512(data, key: self.chainCode)
+		let derivedPrivateKey: [UInt8] = digest[0..<32].map { $0 }
+		let derivedChainCode: [UInt8] = digest[32..<64].map { $0 }
+		var result: Data
+		if let privateKey = self.privateKey {
+			guard let ctx = secp256k1_context_create(UInt32(SECP256K1_CONTEXT_SIGN)) else {
+				return nil
+			}
+			defer { secp256k1_context_destroy(ctx) }
+			var privateKeyBytes = privateKey.map { $0 }
+			var derivedPrivateKeyBytes = derivedPrivateKey.map { $0 }
+			if secp256k1_ec_seckey_tweak_add(ctx, &privateKeyBytes, &derivedPrivateKeyBytes) == 0 {
+				return nil
+			}
+			result = Data(privateKeyBytes)
+		} else {
+			guard let ctx = secp256k1_context_create(UInt32(SECP256K1_CONTEXT_VERIFY)) else {
+				return nil
+			}
+			defer { secp256k1_context_destroy(ctx) }
+			let publicKeyBytes: [UInt8] = publicKey.map { $0 }
+			var secpPubkey = secp256k1_pubkey()
+			if secp256k1_ec_pubkey_parse(ctx, &secpPubkey, publicKeyBytes, publicKeyBytes.count) == 0 {
+				return nil
+			}
+			if secp256k1_ec_pubkey_tweak_add(ctx, &secpPubkey, derivedPrivateKey) == 0 {
+				return nil
+			}
+			var compressedPublicKeyBytes = [UInt8](repeating: 0, count: 33)
+			var compressedPublicKeyBytesLen = 33
+			if secp256k1_ec_pubkey_serialize(ctx, &compressedPublicKeyBytes, &compressedPublicKeyBytesLen, &secpPubkey, UInt32(SECP256K1_EC_COMPRESSED)) == 0 {
+				return nil
+			}
+			result = Data(compressedPublicKeyBytes)
+		}
+	    let fingerPrint: UInt32 = sha256ripemd160(publicKey).to(type: UInt32.self)
+		return _HDKey(privateKey: result, publicKey: result, chainCode: Data(derivedChainCode), depth: self.depth + 1, fingerprint: fingerPrint, childIndex: childIndex)
+    }
 }

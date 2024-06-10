@@ -27,3 +27,11 @@ struct Secp256k1 {
     static let stringMessage = "hello world"
     static let signatureHex = "0xd0d634e843b61339473b028105930ace022980708b2855954b977da09df84a770c0b68c29c8ca1b5409a5085b0ec263be80e433c83fcf6debb82f3447e71edca"
 }
+
+struct Secp256k1Wallet {
+    static let address = "0x4b4aa8759fcef40ba49e999409eb73a98252f44f6612a4de2b23bad5c37b15a6"
+    static let mnemonic = "shoot island position soft burden budget tooth cruel issue economy destroy above"
+    static let path = "m/44'/637'/0'/0/0"
+    static let privateKey = "0x1eec55afc2f72c4ab7b46c84d761739035ac420a2b6b22cef3411adaf91ce1f7"
+    static let publicKey = "0x04913871f1d6cb7b867e8671cf63cf7b4c43819539fa0074ff933434bf20bab825b335535251f720fff72fd8b567e414af84aacf2f26ec804562081f2e0b0c9478"
+}

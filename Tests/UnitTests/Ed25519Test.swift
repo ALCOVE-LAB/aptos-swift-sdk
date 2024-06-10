@@ -171,7 +171,7 @@ class Ed25519PrivateKeyTest: XCTestCase {
     func testShouldPreventAnInvalidBip44Path() {
         let mnemonic = Wallet.mnemonic
         let path = "1234"
-        XCTAssertThrowsError(try Ed25519PrivateKey.fromDerivationPath(path: path, mnemonics: mnemonic)) { error in
+        XCTAssertThrowsError(try Ed25519PrivateKey.fromDerivationPath(path: path, mnemonic: mnemonic)) { error in
             XCTAssertEqual(error as! PrivateKeyError, PrivateKeyError.invalidDerivationPath(path))
         }
     }
@@ -180,9 +180,65 @@ class Ed25519PrivateKeyTest: XCTestCase {
         let mnemonic = Wallet.mnemonic
         let path = Wallet.path
         let privateKey = Wallet.privateKey
-        let key = try Ed25519PrivateKey.fromDerivationPath(path: path, mnemonics: mnemonic)
+        let key = try Ed25519PrivateKey.fromDerivationPath(path: path, mnemonic: mnemonic)
         XCTAssertEqual(key.toString(), privateKey)
     }
 }
     
 
+
+class Ed25519SignatureTest: XCTestCase {
+
+    func testShouldCreateAnInstanceCorrectlyWithoutError() throws {
+        // Create from string
+        let signature = try Ed25519Signature(Ed25519.signatureHex)
+        XCTAssertEqual(signature.toString(), Ed25519.signatureHex)
+
+        // Create from Uint8Array
+        let signatureValue: [UInt8] = Array(repeating: 0, count: Ed25519Signature.LENGTH)
+        let signature2 = try Ed25519Signature(signatureValue)
+        XCTAssertEqual(signature2.toUInt8Array(), signatureValue)
+    }
+
+    func testShouldThrowAnErrorWithInvalidValueLength() {
+        let invalidSignatureValue: [UInt8] = Array(repeating: 0, count: Ed25519Signature.LENGTH - 1) // Invalid length
+        XCTAssertThrowsError(try Ed25519Signature(invalidSignatureValue)) { error in
+            XCTAssertEqual(error as! SignatureError, SignatureError.invalidLength)
+        }
+    }
+
+    func testShouldSerializeCorrectly() throws {
+        let signature = try Ed25519Signature(Ed25519.signatureHex)
+        let serializer = BcsSerializer()
+        try signature.serialize(serializer: serializer)
+        let expectedUint8Array: [UInt8] = [
+            64, 158, 101, 61, 86, 160, 146, 71, 87, 11, 177, 116, 163, 137, 232, 91, 146, 38, 171, 213, 196, 3, 234, 108, 80,
+            75, 56, 102, 38, 161, 69, 21, 140, 212, 239, 214, 111, 197, 224, 113, 192, 225, 149, 56, 169, 106, 5, 221, 189,
+            162, 77, 60, 81, 225, 230, 169, 218, 204, 107, 177, 206, 119, 92, 206, 7,
+        ]
+        XCTAssertEqual(serializer.getBytes(), expectedUint8Array)
+    }
+
+    func testShouldDeserializeCorrectly() throws {
+        let serializedSignature: [UInt8] = [
+            64, 158, 101, 61, 86, 160, 146, 71, 87, 11, 177, 116, 163, 137, 232, 91, 146, 38, 171, 213, 196, 3, 234, 108, 80,
+            75, 56, 102, 38, 161, 69, 21, 140, 212, 239, 214, 111, 197, 224, 113, 192, 225, 149, 56, 169, 106, 5, 221, 189,
+            162, 77, 60, 81, 225, 230, 169, 218, 204, 107, 177, 206, 119, 92, 206, 7,
+        ]
+
+        let deserializer = BcsDeserializer(input: serializedSignature)
+        let signature = try Ed25519Signature.deserialize(deserializer: deserializer)
+        XCTAssertEqual(signature.toString(), Ed25519.signatureHex)
+    }
+
+    func testShouldSerializeAndDeserializeCorrectly() throws {
+        let signature = try Ed25519Signature(Ed25519.signatureHex)
+        let serializer = BcsSerializer()
+        try signature.serialize(serializer: serializer)
+
+        let deserializer = BcsDeserializer(input: serializer.getBytes())
+        let deserializedSignature = try Ed25519Signature.deserialize(deserializer: deserializer)
+
+        XCTAssertEqual(deserializedSignature, signature)
+    }
+}

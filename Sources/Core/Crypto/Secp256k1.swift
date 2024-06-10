@@ -6,7 +6,7 @@ import BIP32
 import CryptoSwift
 import Crypto
 
-public struct Secp256k1PublicKey: PublicKey, Equatable {
+public struct Secp256k1PublicKey: PublicKey {
     
     public static let LENGTH = 65
     public private(set) var key: Hex
@@ -19,7 +19,7 @@ public struct Secp256k1PublicKey: PublicKey, Equatable {
         self.key = hex
     }
 
-    public func verifySignature(message: HexInput, signature: Signature) throws -> Bool {
+    public func verifySignature(message: HexInput, signature: any Signature) throws -> Bool {
         guard let signature = signature as? Secp256k1Signature else {
             return false
         }
@@ -39,7 +39,7 @@ public struct Secp256k1PublicKey: PublicKey, Equatable {
     }
 }
 
-public struct Secp256k1PrivateKey: PrivateKey, Equatable {
+public struct Secp256k1PrivateKey: PrivateKey {
     
     public static let LENGTH = 32
     public private(set) var key: Hex
@@ -57,11 +57,11 @@ public struct Secp256k1PrivateKey: PrivateKey, Equatable {
         return try Secp256k1PrivateKey(privateKey.dataRepresentation)
     }
     
-    public static func fromDerivationPath(path: String, mnemonics: String) throws -> Secp256k1PrivateKey {
+    public static func fromDerivationPath(path: String, mnemonic: String) throws -> Secp256k1PrivateKey {
         guard path.isValidBIP44Path() else {
             throw PrivateKeyError.invalidBIP44Path(path)
         }
-        return try fromDerivationPathInner(path: path, seed: mnemonics.mnemonicToSeed())
+        return try fromDerivationPathInner(path: path, seed: mnemonic.mnemonicToSeed())
     }
 
     private static func fromDerivationPathInner(path: String, seed: [UInt8]) throws -> Secp256k1PrivateKey {
@@ -73,22 +73,6 @@ public struct Secp256k1PrivateKey: PrivateKey, Equatable {
         let privateKeyBytes = key.toUInt8Array()
         let privateKey = try secp256k1.Signing.PrivateKey(dataRepresentation: privateKeyBytes)
         return try Secp256k1PublicKey(privateKey.publicKey.dataRepresentation)
-    }
-
-    private struct SHA3Digest: Crypto.Digest {
-        let bytes: [UInt8]
-        
-        init(bytes: [UInt8]) {
-            self.bytes = bytes
-        }
-        
-        func withUnsafeBytes<ResultType>(_ body: (UnsafeRawBufferPointer) throws -> ResultType) rethrows -> ResultType {
-            try body(bytes.withUnsafeBytes { $0 })
-        }
-        
-        public static var byteCount: Int {
-            return 32
-        }
     }
 
     public func sign(message: HexInput) throws -> any Signature {
@@ -104,8 +88,8 @@ public struct Secp256k1PrivateKey: PrivateKey, Equatable {
         return key.toUInt8Array()
     }
 
-    static public func == (lhs: Secp256k1PrivateKey, rhs: Secp256k1PrivateKey) -> Bool {
-        return lhs.key == rhs.key
+    public func toString() -> String {
+        return key.toString()
     }
 }
 
@@ -125,5 +109,9 @@ public struct Secp256k1Signature: Signature {
     
     public func toUInt8Array() -> [UInt8] {
         return data.toUInt8Array()
+    }
+
+    static public func == (lhs: Secp256k1Signature, rhs: Secp256k1Signature) -> Bool {
+        return lhs.data == rhs.data
     }
 }

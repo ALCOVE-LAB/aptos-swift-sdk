@@ -3,7 +3,7 @@ import Foundation
 import BCS 
 import Core 
 import secp256k1
-import Types
+import Types 
 
 class Secp256k1PublicKeyTest: XCTestCase {
 
@@ -34,60 +34,47 @@ class Secp256k1PublicKeyTest: XCTestCase {
         // Verify with correct signed message"
         XCTAssertTrue(try pubKey.verifySignature(message: hexMsg.toUInt8Array(), signature: signature))
 
-        //Verify with incorrect signed message
-        // let incorrectSignedMessage = "0xc5de9e40ac00b371cd83b1c197fa5b665b7449b33cd3cdd305bb78222e06a671a49625ab9aea8a039d4bb70e275768084d62b094bc1b31964f2357b7c1af7e0a"
-        // let invalidSignature = try Secp256k1Signature(incorrectSignedMessage)
-        // XCTAssertFalse(try pubKey.verifySignature(message: Secp256k1.messageEncoded, signature: invalidSignature))
+        // Verify with incorrect signed message
+        let incorrectSignedMessage = "0xc5de9e40ac00b371cd83b1c197fa5b665b7449b33cd3cdd305bb78222e06a671a49625ab9aea8a039d4bb70e275768084d62b094bc1b31964f2357b7c1af7e0a"
+        let invalidSignature = try Secp256k1Signature(incorrectSignedMessage)
+        XCTAssertFalse(try pubKey.verifySignature(message: Secp256k1.messageEncoded, signature: invalidSignature))
     }
 
-    /*
+    func testShouldSerializeCorrectly() throws {
+        let publicKey = try Secp256k1PublicKey(Secp256k1.publicKey)
+        let serializer = BcsSerializer()
+        try publicKey.serialize(serializer: serializer)
+        let serialized = try Hex.fromHexInput(serializer.toUInt8Array()).toString()
+        let  expected = "0x4104acdd16651b839c24665b7e2033b55225f384554949fef46c397b5275f37f6ee95554d70fb5d9f93c5831ebf695c7206e7477ce708f03ae9bb2862dc6c9e033ea"
+        XCTAssertEqual(serialized, expected)
+    }
 
-  it("should verify the signature correctly", () => {
-    const pubKey = new Secp256k1PublicKey(secp256k1TestObject.publicKey);
-    const signature = new Secp256k1Signature(secp256k1TestObject.signatureHex);
 
-    // Convert message to hex
-    const hexMsg = Hex.fromHexString(secp256k1TestObject.messageEncoded);
-
-    // Verify with correct signed message
-    expect(pubKey.verifySignature({ message: hexMsg.toUint8Array(), signature })).toBe(true);
-
-    // Verify with incorrect signed message
-    const incorrectSignedMessage =
-      "0xc5de9e40ac00b371cd83b1c197fa5b665b7449b33cd3cdd305bb78222e06a671a49625ab9aea8a039d4bb70e275768084d62b094bc1b31964f2357b7c1af7e0a";
-    const invalidSignature = new Secp256k1Signature(incorrectSignedMessage);
-    expect(
-      pubKey.verifySignature({
-        message: secp256k1TestObject.messageEncoded,
-        signature: invalidSignature,
-      }),
-    ).toBe(false);
-  });
-
-  it("should serialize correctly", () => {
-    const publicKey = new Secp256k1PublicKey(secp256k1TestObject.publicKey);
-    const serializer = new Serializer();
-    publicKey.serialize(serializer);
-
-    const serialized = Hex.fromHexInput(serializer.toUint8Array()).toString();
-    const expected =
-      "0x4104acdd16651b839c24665b7e2033b55225f384554949fef46c397b5275f37f6ee95554d70fb5d9f93c5831ebf695c7206e7477ce708f03ae9bb2862dc6c9e033ea";
-    expect(serialized).toEqual(expected);
-  });
-
-  it("should deserialize correctly", () => {
-    const serializedPublicKeyStr =
-      "0x4104acdd16651b839c24665b7e2033b55225f384554949fef46c397b5275f37f6ee95554d70fb5d9f93c5831ebf695c7206e7477ce708f03ae9bb2862dc6c9e033ea";
-    const serializedPublicKey = Hex.fromHexString(serializedPublicKeyStr).toUint8Array();
-    const deserializer = new Deserializer(serializedPublicKey);
-    const publicKey = Secp256k1PublicKey.deserialize(deserializer);
-
-    expect(publicKey.toString()).toEqual(secp256k1TestObject.publicKey);
-  });
-    */
+    func testShouldDeserializeCorrectly() throws {
+        let serializedPublicKeyStr = "0x4104acdd16651b839c24665b7e2033b55225f384554949fef46c397b5275f37f6ee95554d70fb5d9f93c5831ebf695c7206e7477ce708f03ae9bb2862dc6c9e033ea"
+        let serializedPublicKey = try Hex.fromHexString(serializedPublicKeyStr).toUInt8Array()
+        let deserializer = BcsDeserializer(input: serializedPublicKey)
+        let publicKey = try Secp256k1PublicKey.deserialize(deserializer: deserializer)
+        XCTAssertEqual(publicKey.toString(), Secp256k1.publicKey)
+    }
 }
 
 class Secp256k1PrivateKeyTest: XCTestCase {
+
+  func testShouldCreateTheInstanceCorrectlyWithoutError() throws {
+    // Create from string
+    let privateKey = try Secp256k1PrivateKey(Secp256k1.privateKey)
+    XCTAssertEqual(privateKey.toString(), Secp256k1.privateKey)
+
+    // Create from Uint8Array
+    let hexUint8Array = try Hex.fromHexString(Secp256k1.privateKey).toUInt8Array()
+    let privateKey2 = try Secp256k1PrivateKey(hexUint8Array)
+    XCTAssertEqual(privateKey2.toString(), try Hex.fromHexInput(hexUint8Array).toString())
+
+    let privateData = try secp256k1.Signing.PrivateKey(format: .uncompressed).dataRepresentation
+    let privateKey3 = try Secp256k1PrivateKey(privateData)
+    XCTAssertEqual(privateKey3.toUInt8Array(), Array(privateData))
+  }
 
   func testShouldSignTheMessageCorrectly() throws {
     let privateKey = try Secp256k1PrivateKey(Secp256k1.privateKey)
@@ -95,8 +82,98 @@ class Secp256k1PrivateKeyTest: XCTestCase {
     XCTAssertEqual(signedMessage.toString(), Secp256k1.signatureHex)
   }
 
+  func testShouldThrowAnErrorWithInvalidHexInputLength() throws {
+    let invalidHexInput = "0123456789abcdef" // Invalid length
+    XCTAssertThrowsError(try Secp256k1PrivateKey(invalidHexInput)) { error in
+        XCTAssertEqual(error as! PrivateKeyError, PrivateKeyError.invalidLength)
+    }
+  }
+
+  func testShouldSerializeCorrectly() throws {
+    let privateKey = try Secp256k1PrivateKey(Secp256k1.privateKey)
+    let serializer = BcsSerializer()
+    try privateKey.serialize(serializer: serializer)
+    let serialized = try Hex.fromHexInput(serializer.toUInt8Array()).toString()
+    let expected = "0x20d107155adf816a0a94c6db3c9489c13ad8a1eda7ada2e558ba3bfa47c020347e"
+    XCTAssertEqual(serialized, expected)
+  }
+
+  func testShouldDeserializeCorrectly() throws {
+    let serializedPrivateKeyStr = "0x20d107155adf816a0a94c6db3c9489c13ad8a1eda7ada2e558ba3bfa47c020347e"
+    let serializedPrivateKey = try Hex.fromHexString(serializedPrivateKeyStr).toUInt8Array()
+    let deserializer = BcsDeserializer(input: serializedPrivateKey)
+    let privateKey = try Secp256k1PrivateKey.deserialize(deserializer: deserializer)
+    XCTAssertEqual(privateKey.toString(), Secp256k1.privateKey)
+  }
+
+  func testShouldSerializeAndDeserializeCorrectly() throws {
+    let privateKey = try Secp256k1PrivateKey(Secp256k1.privateKey)
+    let serializer = BcsSerializer()
+    try privateKey.serialize(serializer: serializer)
+
+    let deserializer = BcsDeserializer(input: serializer.toUInt8Array())
+    let deserializedPrivateKey = try Secp256k1PrivateKey.deserialize(deserializer: deserializer)
+    XCTAssertEqual(deserializedPrivateKey.toString(), privateKey.toString())
+  }
+
+  func testShouldPreventAnInvaildBip44Path() throws {
+    let mnemonic = Secp256k1Wallet.mnemonic
+    let path = "1234"
+    XCTAssertThrowsError(try Secp256k1PrivateKey.fromDerivationPath(path: path, mnemonic: mnemonic)) { error in
+        XCTAssertEqual(error as! PrivateKeyError, PrivateKeyError.invalidBIP44Path(path))
+    }
+  }
+
+  func testShouldDeriveFromPathAndMnemonic() throws {
+    let mnemonic = Secp256k1Wallet.mnemonic
+    let path = Secp256k1Wallet.path
+    let privateKey = Secp256k1Wallet.privateKey
+    let key = try Secp256k1PrivateKey.fromDerivationPath(path: path, mnemonic: mnemonic)
+    XCTAssertEqual(key.toString(), privateKey)
+  }
 }
 
 class Secp256k1SignatureTest: XCTestCase {
+  
+  func testShouldCreateAnInstanceCorrectlyWithoutError() throws {
+    // Create from string
+    let signature = try Secp256k1Signature(Secp256k1.signatureHex)
+    XCTAssertEqual(signature.toString(), Secp256k1.signatureHex)
+
+    // Create from Uint8Array
+    let signatureValue = [UInt8](unsafeUninitializedCapacity: Secp256k1Signature.LENGTH, initializingWith: { buffer, count in
+      for i in 0..<Secp256k1Signature.LENGTH {
+        buffer[i] = UInt8(i)
+      }
+      count = Secp256k1Signature.LENGTH
+    } )
+
+    let signature2 = try Secp256k1Signature(signatureValue)
+    XCTAssertEqual(signature2.toUInt8Array(), signatureValue)
+  }
+
+  func testShouldThrowAnErrorWithInvaildValueLength() throws {
+    let invalidSignatureValue = [UInt8](repeating: 0, count: Secp256k1Signature.LENGTH - 1) // Invalid length
+    XCTAssertThrowsError(try Secp256k1Signature(invalidSignatureValue)) { error in
+        XCTAssertEqual(error as! SignatureError, SignatureError.invalidLength)
+    }
+  }
+
+  func testShouldSerializeCorrectly() throws {
+    let signature = try Secp256k1Signature(Secp256k1.signatureHex)
+    let serializer = BcsSerializer()
+    try signature.serialize(serializer: serializer)
+    let serialized = try Hex.fromHexInput(serializer.toUInt8Array()).toString()
+    let expected = "0x40d0d634e843b61339473b028105930ace022980708b2855954b977da09df84a770c0b68c29c8ca1b5409a5085b0ec263be80e433c83fcf6debb82f3447e71edca"
+    XCTAssertEqual(serialized, expected)
+  }
+
+  func testShouldDeserializeCorrectly() throws {
+    let serializedSignatureStr = "0x40d0d634e843b61339473b028105930ace022980708b2855954b977da09df84a770c0b68c29c8ca1b5409a5085b0ec263be80e433c83fcf6debb82f3447e71edca"
+    let serializedSignature = try Hex.fromHexString(serializedSignatureStr).toUInt8Array()
+    let deserializer = BcsDeserializer(input: serializedSignature)
+    let signature = try Secp256k1Signature.deserialize(deserializer: deserializer)
+    XCTAssertEqual(signature.toString(), Secp256k1.signatureHex)
+  }
 
 }

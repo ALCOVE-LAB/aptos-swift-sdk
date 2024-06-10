@@ -26,14 +26,20 @@ extension PrivateKeyError: Equatable {
 
 }
 
-public protocol PrivateKey: Serializable, Deserializable {
+public protocol PrivateKey: Serializable, Deserializable, Equatable, Hashable, Sendable {
     init(_ hexInput: HexInput) throws
-    func sign(message: HexInput) throws -> Signature
+    func sign(message: HexInput) throws -> any Signature
     func toUInt8Array() -> [UInt8]
     func publicKey() throws -> any PublicKey
 }
 
 extension PrivateKey {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(toUInt8Array())
+    }
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        return lhs.toUInt8Array() == rhs.toUInt8Array()
+    }
     public func serialize(serializer: Serializer) throws {
         try serializer.serializeBytes(value: toUInt8Array())
     }

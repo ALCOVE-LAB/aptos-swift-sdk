@@ -15,7 +15,7 @@ private let L = [
 ///
 /// Ed25519 scheme is represented in the SDK as `Legacy authentication key` and also
 ///  as `AnyPublicKey` that represents any `Unified authentication key`
-public struct Ed25519PublicKey: AccountPublicKey, Equatable {
+public struct Ed25519PublicKey: AccountPublicKey {
 	/// The length of an Ed25519 public key.
 	public static let LENGTH = 32
 	/// The public key as a Hex.
@@ -36,7 +36,7 @@ public struct Ed25519PublicKey: AccountPublicKey, Equatable {
 	///   - message: a signed message as a Hex string or Uint8Array
 	///   - signature: the signature of the message
 	/// - Returns: true if the signature is valid, false otherwise
-    public func verifySignature(message: HexInput, signature: Signature) throws -> Bool {
+    public func verifySignature(message: HexInput, signature: any Signature) throws -> Bool {
 		guard let signature = signature as? Ed25519Signature else {
 			return false
 		}
@@ -62,14 +62,10 @@ public struct Ed25519PublicKey: AccountPublicKey, Equatable {
 	public func toUInt8Array() -> [UInt8] {
 		return key.toUInt8Array()
 	}
-
-	static public func == (lhs: Ed25519PublicKey, rhs: Ed25519PublicKey) -> Bool {
-		return lhs.key == rhs.key
-	}
 }
 
 /// Represents the private key of an Ed25519 key pair.
-public struct Ed25519PrivateKey: PrivateKey, Equatable {
+public struct Ed25519PrivateKey: PrivateKey {
 	/// The length of an Ed25519 private key.
 	public static let LENGTH = 32
 
@@ -77,8 +73,6 @@ public struct Ed25519PrivateKey: PrivateKey, Equatable {
 
 	/// The private key as a Hex.
 	public private(set) var signingKey: Hex
-
-	private var randomPublicKey: Data?
 
 	/// Initialize a private key from a HexInput.
 	/// - Parameter hexInput: a HexInput
@@ -97,11 +91,11 @@ public struct Ed25519PrivateKey: PrivateKey, Equatable {
 		return try! Ed25519PrivateKey(keyPar.rawRepresentation)
 	}
 
-	public static func fromDerivationPath(path: String, mnemonics: String) throws -> Ed25519PrivateKey {
+	public static func fromDerivationPath(path: String, mnemonic: String) throws -> Ed25519PrivateKey {
 		if !path.isValidHardenedPath() {
 			throw PrivateKeyError.invalidDerivationPath(path)
 		}
-		return try Ed25519PrivateKey.fromDerivationPathInner(path: path, seed: mnemonics.mnemonicToSeed())
+		return try Ed25519PrivateKey.fromDerivationPathInner(path: path, seed: mnemonic.mnemonicToSeed())
 	}
 
 	private static func fromDerivationPathInner(
@@ -133,7 +127,7 @@ public struct Ed25519PrivateKey: PrivateKey, Equatable {
 	/// `Curve25519.Signing.PrivateKey` employs randomization to generate a
 	/// different signature on every call, even for the same message and key, to
 	/// guard against side-channel attacks.
-	public func sign(message: HexInput) throws -> Signature {
+	public func sign(message: HexInput) throws -> any Signature {
 		let signingKey = try Curve25519.Signing.PrivateKey(rawRepresentation: signingKey.toUInt8Array())
 		let messageToSign = message.convertSigningMessage()
 		let messageBytes = try Hex.fromHexInput(messageToSign).toUInt8Array()
@@ -147,10 +141,6 @@ public struct Ed25519PrivateKey: PrivateKey, Equatable {
 	
 	public func toString() -> String {
 		return signingKey.toString()
-	}
-
-	static public func == (lhs: Ed25519PrivateKey, rhs: Ed25519PrivateKey) -> Bool {
-		return lhs.signingKey == rhs.signingKey
 	}
 }
 
