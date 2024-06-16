@@ -13,6 +13,7 @@ public struct Secp256k1PublicKey: PublicKey {
 
     public init(_ hexInput: HexInput) throws {
         let hex = try Hex.fromHexInput(hexInput)
+
         if hex.toUInt8Array().count != Secp256k1PublicKey.LENGTH {
             throw PublicKeyError.invalidLength
         }
@@ -71,7 +72,7 @@ public struct Secp256k1PrivateKey: PrivateKey {
 
     public func publicKey() throws -> any PublicKey {
         let privateKeyBytes = key.toUInt8Array()
-        let privateKey = try secp256k1.Signing.PrivateKey(dataRepresentation: privateKeyBytes)
+        let privateKey = try secp256k1.Signing.PrivateKey(dataRepresentation: privateKeyBytes, format: .uncompressed)
         return try Secp256k1PublicKey(privateKey.publicKey.dataRepresentation)
     }
 
@@ -99,7 +100,7 @@ public struct Secp256k1Signature: Signature {
     public static let LENGTH = 64
     public private(set) var data: Hex
 
-    public init(_ hexInput: Types.HexInput) throws {
+    public init(_ hexInput: HexInput) throws {
         let data = try Hex.fromHexInput(hexInput)
         if data.toUInt8Array().count != Secp256k1Signature.LENGTH {
             throw SignatureError.invalidLength

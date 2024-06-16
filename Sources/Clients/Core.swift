@@ -159,8 +159,8 @@ public extension PostRequestOptions {
     var body: RequestBody? { nil }
 }
 
-public enum RequestBody {
-    case json([String: Any])
+public enum RequestBody: Sendable {
+    case json([String: Sendable])
     case codable(any Encodable & Sendable)
     case binary(HTTPBody)
 }

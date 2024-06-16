@@ -131,6 +131,8 @@ public struct AccountAddress: Sendable, Serializable, Deserializable {
             return try AccountAddress(data: data)
         case let array as [UInt8]:
             return try AccountAddress(data: array)
+        case let address as AccountAddress:
+            return address
         default: break
         }
         throw ParsingError<AddressInvalidReason>(message: "Invalid input type", reason: .invalidInputType)
@@ -172,16 +174,6 @@ public struct AccountAddress: Sendable, Serializable, Deserializable {
 extension AccountAddress {
     public func serialize(serializer: Serializer) throws {
         try serializer.serializeFixedBytes(value: self.data)
-    }
-
-    public func serializeForEntryFunction(serializer: Serializer) throws {
-        let bcsBytes = try self.bcsToBytes()
-        try serializer.serializeBytes(value: bcsBytes)
-    }
-
-    public func serializeForScriptFunction(serializer: Serializer) throws {
-        try serializer.serializeVariantIndex(value: UInt32(ScriptTransactionArgumentVariants.Address.rawValue))
-        try serializer.serialize(value: self)
     }
 
     public static func deserialize(deserializer: Deserializer) throws -> AccountAddress {

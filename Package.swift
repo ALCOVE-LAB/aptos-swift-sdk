@@ -31,6 +31,7 @@ let package = Package(
             name: "Aptos",
             dependencies: [
                 .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "CryptoSwift", package: "cryptoswift"),
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 "Clients",
@@ -57,7 +58,8 @@ let package = Package(
             name: "Types",
             dependencies: [
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
-                "BCS"
+                "BCS",
+                "Clients"
             ]
         ),
         .target(

@@ -1,30 +1,112 @@
+@_spi(Generated) import OpenAPIRuntime
 import Foundation
 import BCS
-@_spi(Generated) import OpenAPIRuntime
+import BigInt
+import Utils
+import Clients
+import OpenAPIURLSession
 
-public struct ParsingError<T>: Error {
-    public let message: String
-    public let reason: T
+public typealias ClientHeadersType = [String:String]
+
+public struct ClientConfig: Sendable {
+    public var HEADERS: ClientHeadersType
+    public var WITH_CREDENTIALS: Bool?
+    public var API_KEY: String?
 }
 
-public struct ParsingResult<T> {
-    public let valid: Bool
-    public let invalidReason: T?
-    public let invalidReasonMessage: String?
+public struct FaucetConfig: Sendable {
+    public var HEADERS: ClientHeadersType
+    public var AUTH_TOKEN: String?
 }
 
-extension Serializable {
-    public func bcsToBytes() throws -> [UInt8] {
-        let serializer = BcsSerializer()
-        try serialize(serializer: serializer)
-        return serializer.getBytes()
-    }
+public struct AptosConfig: Sendable {
+    public let network: Network
     
-    public func bcsToHex() throws -> Hex {
-        return Hex(data: try bcsToBytes())
+    public let transport: any ClientTransport
+    public let clientConfig: ClientConfig?
+    public let fullnodeConfig: ClientHeadersType?
+    public let indexerConfig: ClientHeadersType?
+    public let faucetConfig: FaucetConfig?
+    
+
+    public init(
+        network: Network = .init(),
+        transprot: any ClientTransport = URLSessionTransport(),
+        clientConfig: ClientConfig? = nil,
+        fullnodeConfig: ClientHeadersType? = nil,
+        indexerConfig: ClientHeadersType? = nil,
+        faucetConfig: FaucetConfig? = nil
+    ) {
+        self.network = network
+        self.transport = transprot
+        self.clientConfig = clientConfig
+        self.fullnodeConfig = fullnodeConfig
+        self.indexerConfig = indexerConfig
+        self.faucetConfig = faucetConfig
     }
 }
 
+public typealias Pagination = (offset: String, limit: Int)
+public protocol PagenationRequest {
+    var page: Pagination? { get }
+    var query: Parameter? {set get}
+}
+
+public struct LedgerVersionArg {
+    public var ledgerVersion: AnyNumber?
+}
+
+
+
+public enum ScriptTransactionArgumentVariants: UInt32 {
+    case U8 = 0
+    case U64 = 1
+    case U128 = 2
+    case Address = 3
+    case U8Vector = 4
+    case Bool = 5
+    case U16 = 6
+    case U32 = 7
+    case U256 = 8
+}
+
+public enum TransactionPayloadVariants: UInt32 {
+    case script = 0
+    case entryFunction = 2
+    case multiSig = 3
+}
+
+public enum TypeTagVariants: UInt32 {
+    case Bool = 0
+    case U8 = 1
+    case U64 = 2
+    case U128 = 3
+    case Address = 4
+    case Signer = 5
+    case Vector = 6
+    case Struct = 7
+    case U16 = 8
+    case U32 = 9
+    case U256 = 10
+    case Reference = 254
+    case Generic = 255
+}
+
+public enum TransactionVariants: UInt32 {
+  case multiAgent = 0
+  case feePayer = 1
+}
+
+
+public protocol AnyNumber: Encodable, Sendable {}
+extension Int: AnyNumber {}
+extension UInt: AnyNumber {}
+extension UInt8: AnyNumber {}
+extension UInt16: AnyNumber {}
+extension UInt32: AnyNumber {}
+extension UInt64: AnyNumber {}
+extension BigUInt: @unchecked Sendable, AnyNumber {}
+extension BigInt: @unchecked Sendable, AnyNumber {}
 
 // MARK: - Account & Transaction
 
@@ -40,17 +122,6 @@ public struct AccountData: Codable, Hashable, Sendable {
 }
 
 
-public enum ScriptTransactionArgumentVariants: Int {
-    case U8 = 0
-    case U64 = 1
-    case U128 = 2
-    case Address = 3
-    case U8Vector = 4
-    case Bool = 5
-    case U16 = 6
-    case U32 = 7
-    case U256 = 8
-}
 
 public struct WaitForTransactionOptions {
     public static let DEFAULT_TXN_TIMEOUT_SEC = 20
@@ -61,7 +132,8 @@ public struct WaitForTransactionOptions {
 }
 
 public typealias MoveStructValue = OpenAPIRuntime.OpenAPIObjectContainer
-public typealias MoveStructTag = String
+public typealias MoveStructId = String
+public typealias MoveFunctionId = MoveStructId
 public typealias EntryFunctionId = String
 public typealias HexEncodedBytes = String
 public typealias IdentifierWrapper = String
@@ -69,7 +141,7 @@ public typealias MoveModuleId = String
 public typealias MoveType = String
 
 public struct MoveResource: Codable, Hashable, Sendable {
-    public var type: MoveStructTag
+    public var type: MoveStructId
     public var data: MoveStructValue
     
     public enum CodingKeys: String, CodingKey {
@@ -79,7 +151,7 @@ public struct MoveResource: Codable, Hashable, Sendable {
 }
 
 public struct MoveResourceParser<Data: Codable & Sendable>: Codable, Sendable {
-    public var type: MoveStructTag
+    public var type: MoveStructId
     public var data: Data
     
     public enum CodingKeys: String, CodingKey {
@@ -411,7 +483,7 @@ public struct PendingTransaction: Codable, Hashable, Sendable {
     
     public var expirationTimestampSecs: String
     
-    public var payload: TransactionPayload
+    public var payload: TransactionPayloadResponse
     
     public var signature: TransactionSignature?
     
@@ -487,7 +559,7 @@ public struct UserTransaction: Codable, Hashable, Sendable {
     
     public var expirationTimestampSecs: String
     
-    public var payload: TransactionPayload
+    public var payload: TransactionPayloadResponse
     
     public var signature: TransactionSignature?
     /// Events generated by the transaction
@@ -651,7 +723,7 @@ public struct DeleteResource: Codable, Hashable, Sendable {
     public var address: String
     /// State key hash
     public var stateKeyHash: String
-    public var resource: MoveStructTag
+    public var resource: MoveStructId
     
     public enum CodingKeys: String, CodingKey {
         case address
@@ -854,27 +926,11 @@ public struct DirectWriteSet: Codable, Hashable, Sendable {
 
 public struct ScriptWriteSet: Codable, Hashable, Sendable {
     public var executeAs: String
-    public var script: ScriptPayload
+    public var script: TransactionPayloadResponse.Script
     
     public enum CodingKeys: String, CodingKey {
         case executeAs = "execute_as"
         case script
-    }
-}
-
-/// Payload which runs a script that can run multiple functions
-public struct ScriptPayload: Codable, Hashable, Sendable {
-    public typealias Argument = OpenAPIRuntime.OpenAPIValueContainer
-    public var code: MoveScriptBytecode
-    /// Type arguments of the function
-    public var typeArguments: [MoveType]
-    /// Arguments of the function
-    public var arguments: [ScriptPayload.Argument]
-    
-    public enum CodingKeys: String, CodingKey {
-        case code
-        case typeArguments = "type_arguments"
-        case arguments
     }
 }
 
@@ -913,16 +969,16 @@ public struct MoveStruct: Codable, Hashable, Sendable {
 }
 
 /// An enum of the possible transaction payloads
-public enum TransactionPayload: Codable, Hashable, Sendable {
+public enum TransactionPayloadResponse: Codable, Hashable, Sendable {
     public typealias DeprecatedModuleBundlePayload = OpenAPIRuntime.OpenAPIObjectContainer
     
-    case entryFunctionPayload(EntryFunctionPayload)
+    case entryFunctionPayload(EntryFunction)
     
-    case moduleBundlePayload(TransactionPayload.DeprecatedModuleBundlePayload)
+    case moduleBundlePayload(DeprecatedModuleBundlePayload)
     
-    case multisigPayload(MultisigPayload)
+    case multisigPayload(Multisig)
     
-    case scriptPayload(ScriptPayload)
+    case scriptPayload(Script)
     
     public enum CodingKeys: String, CodingKey {
         case _type = "type"
@@ -965,29 +1021,49 @@ public enum TransactionPayload: Codable, Hashable, Sendable {
     }
 }
 
+
+extension TransactionPayloadResponse {
+
 /// Payload which runs a single entry function
-public struct EntryFunctionPayload: Codable, Hashable, Sendable {
+public struct EntryFunction: Codable, Hashable, Sendable {
     public typealias Argument = OpenAPIRuntime.OpenAPIValueContainer
     public var function: EntryFunctionId
     /// Type arguments of the function
     public var typeArguments: [MoveType]
     /// Arguments of the function
-    public var arguments: [EntryFunctionPayload.Argument]
+    public var arguments: [EntryFunction.Argument]
     
     public enum CodingKeys: String, CodingKey {
         case function
-        case typeArguments
+        case typeArguments = "type_arguments"
+        case arguments
+    }
+}
+
+
+/// Payload which runs a script that can run multiple functions
+public struct Script: Codable, Hashable, Sendable {
+    public typealias Argument = OpenAPIRuntime.OpenAPIValueContainer
+    public var code: MoveScriptBytecode
+    /// Type arguments of the function
+    public var typeArguments: [MoveType]
+    /// Arguments of the function
+    public var arguments: [Script.Argument]
+    
+    public enum CodingKeys: String, CodingKey {
+        case code
+        case typeArguments = "type_arguments"
         case arguments
     }
 }
 
 /// A multisig transaction that allows an owner of a multisig account to execute a pre-approved
 /// transaction as the multisig account.
-public struct MultisigPayload: Codable, Hashable, Sendable {
+public struct Multisig: Codable, Hashable, Sendable {
     
     public var multisigAddress: String
     
-    public var transactionPayload: MultisigTransactionPayload?
+    public var transactionPayload: TransactionPayloadResponse.Multisig.Transaction?
     
     public enum CodingKeys: String, CodingKey {
         case multisigAddress = "multisig_address"
@@ -995,34 +1071,40 @@ public struct MultisigPayload: Codable, Hashable, Sendable {
     }
 }
 
-public enum MultisigTransactionPayload: Codable, Hashable, Sendable {
-    case entryFunctionPayload(EntryFunctionPayload)
-    
-    public enum CodingKeys: String, CodingKey {
-        case _type = "type"
-    }
-    
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let discriminator = try container.decode(
-            Swift.String.self,
-            forKey: ._type
-        )
-        switch discriminator {
-        case "entry_function_payload":
-            self = .entryFunctionPayload(try .init(from: decoder))
-        default:
-            throw DecodingError.unknownOneOfDiscriminator(
-                discriminatorKey: CodingKeys._type,
-                discriminatorValue: discriminator,
-                codingPath: decoder.codingPath
-            )
+
+}
+
+extension TransactionPayloadResponse.Multisig {
+
+    public enum Transaction: Codable, Hashable, Sendable {
+        case entryFunctionPayload(TransactionPayloadResponse.EntryFunction)
+        
+        public enum CodingKeys: String, CodingKey {
+            case _type = "type"
         }
-    }
-    public func encode(to encoder: any Encoder) throws {
-        switch self {
-        case let .entryFunctionPayload(value):
-            try value.encode(to: encoder)
+        
+        public init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let discriminator = try container.decode(
+                Swift.String.self,
+                forKey: ._type
+            )
+            switch discriminator {
+            case "entry_function_payload":
+                self = .entryFunctionPayload(try .init(from: decoder))
+            default:
+                throw DecodingError.unknownOneOfDiscriminator(
+                    discriminatorKey: CodingKeys._type,
+                    discriminatorValue: discriminator,
+                    codingPath: decoder.codingPath
+                )
+            }
+        }
+        public func encode(to encoder: any Encoder) throws {
+            switch self {
+            case let .entryFunctionPayload(value):
+                try value.encode(to: encoder)
+            }
         }
     }
 }

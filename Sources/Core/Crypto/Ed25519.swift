@@ -25,6 +25,7 @@ public struct Ed25519PublicKey: AccountPublicKey {
 	/// - Parameter hexInput: a HexInput
    	public init(_ hexInput: HexInput) throws {
         let hex = try Hex.fromHexInput(hexInput)
+
         if hex.toUInt8Array().count != Ed25519PublicKey.LENGTH {
             throw PublicKeyError.invalidLength
         }

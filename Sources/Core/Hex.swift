@@ -1,5 +1,23 @@
 
 import Foundation
+import BCS
+
+extension Serializable {
+    public func bcsToHex() throws -> Hex {
+        return Hex(data: try bcsToBytes())
+    }
+}
+
+public struct ParsingError<T>: Error {
+    public let message: String
+    public let reason: T
+}
+
+public struct ParsingResult<T> {
+    public let valid: Bool
+    public let invalidReason: T?
+    public let invalidReasonMessage: String?
+}
 
 public enum HexInvalidReason: String, Sendable {
     case tooShort = "too_short"

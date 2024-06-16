@@ -43,7 +43,7 @@ public protocol AccountProtocol: Sendable {
     var accountAddress: AccountAddress { get }
     var signingScheme: SigningScheme { get }
 
-    func signWithAuthenticator(message: HexInput) throws -> any AccountAuthenticatorProtoocl
+    func signWithAuthenticator(message: HexInput) throws -> AccountAuthenticator
 }
 extension AccountProtocol {
     public func verifySignature(message: HexInput, signature: any Signature) throws -> Bool {
@@ -55,22 +55,22 @@ extension AccountProtocol {
     }
 }
 
-enum Account {}
+public enum Account {}
 
 extension Account {
-    static func generate(_ args: GenerateAccountProtocol) -> any AccountProtocol {
+    public static func generate(_ args: GenerateAccountProtocol) -> any AccountProtocol {
         if case .ed25519 = args.scheme, args.legacy == true {
             return Ed25519Account.generate()
         } 
         return SingleKeyAccount.generate(scheme: args.scheme)
     }
-    static func generate(_ args: GenerateAccountArgs) -> any AccountProtocol {
+    public static func generate(_ args: GenerateAccountArgs) -> any AccountProtocol {
         return generate(args as GenerateAccountProtocol)
     }
-    static func generate() -> Ed25519Account {
+    public static func generate() -> Ed25519Account {
         return generate(.ed25519Account) as! Ed25519Account
     }
-    static func generate(scheme: SigningSchemeInput = .ed25519) -> SingleKeyAccount {
+    public static func generate(scheme: SigningSchemeInput = .ed25519) -> SingleKeyAccount {
         return generate(.init(scheme: scheme, legacy: false)) as! SingleKeyAccount
     }
 }
@@ -155,9 +155,9 @@ extension Account {
             return .ed25519
         }
 
-        public func signWithAuthenticator(message: HexInput) throws -> any AccountAuthenticatorProtoocl {
+        public func signWithAuthenticator(message: HexInput) throws -> AccountAuthenticator {
             let signature = try privaeKey.sign(message: message) as! Ed25519Signature
-            return  AccountAuthenticator.Ed25519(publicKey: rawPublicKey, signature: signature)
+            return  AccountAuthenticator.ed25519(.init(publicKey: rawPublicKey, signature: signature))
         }
 
         public static func generate() -> Ed25519Account {
@@ -192,9 +192,9 @@ extension Account {
             }
         }
 
-        public func signWithAuthenticator(message: HexInput) throws -> any AccountAuthenticatorProtoocl {
+        public func signWithAuthenticator(message: HexInput) throws -> AccountAuthenticator {
             let signature = try privaeKey.sign(message: message)
-            return  AccountAuthenticator.SingleKey(publicKey: publicKey, signature: signature)
+            return  AccountAuthenticator.singleKey(.init(publicKey: publicKey, signature: signature))
         }
 
         public static func generate(scheme: SigningSchemeInput) -> SingleKeyAccount {

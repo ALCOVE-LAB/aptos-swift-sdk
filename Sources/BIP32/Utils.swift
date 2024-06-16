@@ -7,6 +7,8 @@ extension Data {
     }
 }
 
+
+/// https://stackoverflow.com/questions/43091858/swift-hash-a-string-using-hash-hmac-with-ripemd160/43193583#43193583
 struct RIPEMD160 {
 
     private var MDbuf: (UInt32, UInt32, UInt32, UInt32, UInt32)

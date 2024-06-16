@@ -2,9 +2,9 @@ import Foundation
 import Utils
 import Clients
 import OpenAPIRuntime
-import Foundation
 import HTTPTypes
 import OpenAPIURLSession
+import Types
 
 public struct Aptos: Sendable {
     public static func hello() {
@@ -14,66 +14,13 @@ public struct Aptos: Sendable {
     public let aptosConfig: AptosConfig
     public let account: AccountApi
     public let transaction: Transaction
+    public let faucet: Faucet
     
     public init(aptosConfig: AptosConfig) {
         self.aptosConfig = aptosConfig
         self.account = .init(config: aptosConfig)
         self.transaction = .init(config: aptosConfig)
-    }
-}
-
-public typealias ClientHeadersType = [String:String]
-
-public struct ClientConfig: Sendable {
-    public var HEADERS: ClientHeadersType
-    public var WITH_CREDENTIALS: Bool?
-    public var API_KEY: String?
-}
-
-public struct FaucetConfig: Sendable {
-    public var HEADERS: ClientHeadersType
-    public var AUTH_TOKEN: String?
-}
-
-
-public struct AptosConfig: Sendable {
-    public let network: Network
-    
-    private let clientMiddleware: any ClientMiddleware
-    private let _client: any ClientInterface
-    
-    public init(
-        network: Network = .init(),
-        transprot: any ClientTransport = URLSessionTransport(),
-        clientConfig: ClientConfig? = nil,
-        fullnodeConfig: ClientHeadersType? = nil,
-        indexerConfig: ClientHeadersType? = nil,
-        faucetConfig: FaucetConfig? = nil
-    ) {
-        self.network = network
-        
-        self.clientMiddleware = ClientConfigMiddleware(
-            network: network,
-            clientConfig: clientConfig,
-            fullnodeConfig: fullnodeConfig,
-            indexerConfig: indexerConfig,
-            faucetConfig: faucetConfig
-        )
-        
-        guard let serverURL = URL(string: network.api) else {
-            fatalError("Failed to create an URL with the string '\(network.api)'.")
-        }
-        
-        self._client = Client(
-            serverURL: serverURL,
-            configuration: Configuration(),
-            transport: transprot,
-            middlewares: [clientMiddleware]
-        )
-    }
-    
-    var client: any ClientInterface {
-        return _client
+        self.faucet = .init(config: aptosConfig, transaction: transaction)
     }
 }
 
@@ -130,87 +77,4 @@ struct ClientConfigMiddleware: ClientMiddleware {
         return try await next(request, body, baseURL)
     }
     
-}
-
-public protocol AptosCapability {
-    var config: AptosConfig { get }
-}
-
-extension AptosCapability {
-    var client: any ClientInterface {
-        return config.client
-    }
-}
-
-
-extension ClientInterface {
-    public func sendRequest<Body>(_ request: any _RequestOptions) async throws -> AptosResponse<Body> where Body: Decodable {
-        return try await send(input: request) { input in
-            return try input.serializer(with: converter)
-        } deserializer: { resp, httpBody in
-            if case .successful = resp.status.kind {
-                return try await converter.getResponseBodyAsJSON(
-                    Body.self,
-                    from: httpBody
-                ) { body in
-                    return AptosResponse(
-                        requestOptions: request,
-                        body: body,
-                        response: resp,
-                        responseBody: httpBody
-                    )
-                }
-            } else {
-                let apiError = try await converter.getResponseBodyAsJSON(
-                    AptosApiError.Body.self,
-                    from: httpBody) { body in
-                    return AptosApiError(
-                        body: body,
-                        requestOptions: request,
-                        response: resp,
-                        responseBody: httpBody
-                    )
-                }
-                throw apiError
-            }
-        }
-    }
-    
-    func sendPaginateRequest<Body>(
-        _ request: inout RequestOptions & PagenationRequest
-    ) async throws  -> AptosResponse<[Body]> where Body: Decodable {
-        var cursor: String?
-        var query = request.query ?? [:]
-        var result: [Body] = []
-        
-        repeat {
-            let resp: AptosResponse<[Body]> = try await get(request)
-            cursor = resp.response?.headerFields[HTTPField.Name.Aptos.cursor]
-            query["start"] = cursor
-            result.append(contentsOf: resp.body)
-            request.query = query
-        } while (cursor != nil)
-        
-        return .init(requestOptions: request, body: result)
-    }
-    
-    func get<Body>(
-        _ request: any RequestOptions
-    ) async throws -> AptosResponse<Body> where Body: Decodable {
-        return try await sendRequest(request)
-    }
-    
-    func post<Body>(
-        _ request: any PostRequestOptions
-    ) async throws -> AptosResponse<Body> where Body: Decodable {
-        return try await sendRequest(request)
-    }
-}
-
-public typealias Pagination = (offset: String, limit: Int)
-
-
-protocol PagenationRequest {
-    var page: Pagination? { get }
-    var query: Parameter? {set get}
 }

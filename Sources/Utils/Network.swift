@@ -127,6 +127,18 @@ public struct Network: Sendable {
         }
         return nil
     }
+
+
+    public func api(with apiType: AptosApiType) -> URL {
+        switch apiType {
+        case .fullNode:
+            return URL(string: apiEnv.nodeApi)!
+        case .indexer:
+            return URL(string: apiEnv.indexerApi)!
+        case .faucet:
+            return URL(string: apiEnv.faucetApi)!
+        }
+    }
     
     public var chainId: Int {
         switch apiEnv {

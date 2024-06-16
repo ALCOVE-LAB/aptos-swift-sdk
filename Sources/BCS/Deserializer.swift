@@ -51,4 +51,17 @@ public extension Deserializer {
       }
       return vector
   }
+
+  // func deserialize(_ value: any Deserializable.Type) throws -> any Deserializable {
+  //     return try value.deserialize(deserializer: self)
+  // }
+
+  // func deserializeVector(_ value:  any Deserializable.Type) throws -> Array<Deserializable> {
+  //     let length = try deserializeVariantIndex()
+  //     var vector = Array<Deserializable>()
+  //     for _ in 0 ..< length {
+  //         vector.append(try deserialize(value))
+  //     }
+  //     return vector
+  // }
 }

@@ -43,7 +43,7 @@ extension AptosApiError {
     public struct Body: Codable, Hashable, Sendable {
         /// A message describing the error
         public var message: String
-        public var errorCode: ErrorCode
+        public var errorCode: String
         /// A code providing VM error details when submitting transactions to the VM
         public var vmErrorCode: Int?
         /// Creates a new `AptosApiError.Body`.
@@ -54,7 +54,7 @@ extension AptosApiError {
         ///   - vmErrorCode: A code providing VM error details when submitting transactions to the VM
         public init(
             message: String,
-            errorCode: ErrorCode,
+            errorCode: String,
             vmErrorCode: Int? = nil
         ) {
             self.message = message

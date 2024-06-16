@@ -3,8 +3,8 @@ import Foundation
 import Clients
 import Types
 import HTTPTypes
-
-
+import Core
+import Utils
 public struct WaitForTransactionError: Error {
     public var message: String
     public var lastTxn: TransactionResponse?
@@ -14,7 +14,8 @@ public struct FailedTransactionError: Error {
     public var lastTxn: TransactionResponse?
 }
 
-public protocol TransactionAPIProtocol {
+public protocol TransactionAPIProtocol: Sendable {
+    var client: any ClientInterface { get }
     func getTransactions(page: Pagination?) async throws -> [TransactionResponse]
         
     func getTransactionByHash(_ transactionHash: HexInput) async throws -> TransactionResponse
@@ -33,24 +34,24 @@ public protocol TransactionAPIProtocol {
     
 }
 
-extension TransactionAPIProtocol where Self: AptosCapability {
+public extension TransactionAPIProtocol {
     
-    public func getTransactions(page: Pagination?) async throws -> [TransactionResponse] {
+    func getTransactions(page: Pagination?) async throws -> [TransactionResponse] {
         var request: PagenationRequest & RequestOptions = TransactionApiOperation.GetTransactionsPage(page: page)
         return try await client.sendPaginateRequest(&request).body
     }
         
-    public func getTransactionByHash(_ transactionHash: HexInput) async throws -> TransactionResponse {
+    func getTransactionByHash(_ transactionHash: HexInput) async throws -> TransactionResponse {
         let hex = try Hex.fromHexInput(transactionHash).toString()
         return try await client.get(TransactionApiOperation.GetTransactions.byHash(hex)).body
     }
     
     
-    public func getTransactionByVersion(_ ledgerVersion: String) async throws -> TransactionResponse {
+    func getTransactionByVersion(_ ledgerVersion: String) async throws -> TransactionResponse {
         try await client.get(TransactionApiOperation.GetTransactions.byVersion(ledgerVersion)).body
     }
     
-    public func isPendingTransaction(transactionHash: HexInput) async throws -> Bool {
+    func isPendingTransaction(transactionHash: HexInput) async throws -> Bool {
         do {
             let resp = try await getTransactionByHash(transactionHash)
             if case .pendingTransaction(_) = resp {
@@ -65,14 +66,16 @@ extension TransactionAPIProtocol where Self: AptosCapability {
         }
     }
     
-    public func getGasPriceEstimation() async throws -> GasEstimation {
-        // TODO: support cache?
-        try await client.get(TransactionApiOperation.GetTransactions.getGasPriceEstimation).body
+    func getGasPriceEstimation() async throws -> GasEstimation {
+        return try await memoizeAsync(
+            client.get,
+            key: "gas-price-\(client.serverURL)",
+            ttlMs: 1000 * 60 * 5)(TransactionApiOperation.GetTransactions.getGasPriceEstimation).body
 
     }
     
-    
-    public func waitForTransaction(
+    @Sendable
+    func waitForTransaction(
         transactionHash: HexInput,
         options: WaitForTransactionOptions? = nil
     ) async throws -> TransactionResponse {
@@ -100,6 +103,7 @@ extension TransactionAPIProtocol where Self: AptosCapability {
 
         do {
             lastTxn = try await getTransactionByHash(transactionHash)
+            
             if case .pendingTransaction = lastTxn {
                 isPending = true
             } else {
@@ -125,6 +129,8 @@ extension TransactionAPIProtocol where Self: AptosCapability {
         }
 
         while isPending {
+            print("pending... \(Date().timeIntervalSince1970)")
+            
             if timeElapsed >= timeoutSecs {
                 break
             }
@@ -175,8 +181,7 @@ extension TransactionAPIProtocol where Self: AptosCapability {
     }
 }
 
-
-struct TransactionApiOperation {
+private struct TransactionApiOperation {
     struct GetTransactionsPage: PagenationRequest, RequestOptions {
         var page: Pagination?
         init(page: Pagination? = nil) {

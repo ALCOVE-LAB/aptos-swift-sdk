@@ -1,7 +1,7 @@
 import XCTest
 import Types
 import BCS
-
+import Core
 class AccountAddressTest: XCTestCase {
 
     struct Addresses {

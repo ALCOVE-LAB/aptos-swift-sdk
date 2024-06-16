@@ -1,5 +1,6 @@
 import Types
 import XCTest
+import Core
 
 class HexTest: XCTestCase {
     let mockHex = (

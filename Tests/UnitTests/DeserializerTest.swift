@@ -2,7 +2,7 @@ import BCS
 import XCTest
 import Foundation
 import Types
-
+import Core
 class DeserializerTest: XCTestCase {
 
     func testDeserializesAnEmptyString() throws {

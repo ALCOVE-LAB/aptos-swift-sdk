@@ -17,6 +17,6 @@ final class TransactionTest: XCTestCase {
     }
 
     func testTransactionIsPending() async throws {
-        // TODO:
+
     }
 }

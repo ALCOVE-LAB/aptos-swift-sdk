@@ -2,10 +2,22 @@ import Foundation
 
 public enum SerializationError: Error {
     case invalidValue(issue: String)
+    case invalidU128Value
+    case invalidU256Value
+    case invalidU8Vector
 }
 
 public protocol Serializable {
   func serialize(serializer: Serializer) throws;
+  func bcsToBytes() throws -> [UInt8] 
+}
+
+public extension Serializable {
+  func bcsToBytes() throws -> [UInt8] {
+      let serializer = BcsSerializer()
+      try serialize(serializer: serializer)
+      return serializer.getBytes()
+  }
 }
 
 public protocol Serializer {
@@ -41,12 +53,12 @@ public protocol Serializer {
 
 
 public extension Serializer {
-  func serialize<T: Serializable>(value: T) throws {
-        try value.serialize(serializer: self)
+  func serialize(value: any Serializable) throws {
+      try value.serialize(serializer: self)
   }
-  func serializeVector<T: Serializable>(values: Array<T>) throws {
-        try serializeVariantIndex(value: UInt32(values.count))
-        try values.forEach({ try $0.serialize(serializer: self)})
+  func serializeVector(values: Array<any Serializable>) throws {
+      try serializeVariantIndex(value: UInt32(values.count))
+      try values.forEach({ try $0.serialize(serializer: self)})
   }
 
   func toUInt8Array() -> [UInt8] {

@@ -2,15 +2,19 @@ import Foundation
 import Clients
 import Types
 import HTTPTypes
+import Core
+import Utils
+public protocol AccountAPIProtocol {
+    var client: any ClientInterface { get }
+}
 
-public protocol AccountAPIProtocol {}
-
-public extension AccountAPIProtocol where Self: AptosCapability {
+public extension AccountAPIProtocol {
+    // TODO: ledgerVersion as Types.LedgerVersionArg
    
     func getAccountInfo(
         address: AccountAddressInput,
         ledgerVersion: String? = nil) async throws -> AccountData {
-            return try await client.get(AccountApiOperation.GetAccount.info(AccountAddress.from(address))).body
+            return try await client.get(AccountApiOperation.GetAccount.info(AccountAddress.from(address), ledgerVersion: ledgerVersion)).body
     }
     
     func getAccountResources(
@@ -26,7 +30,7 @@ public extension AccountAPIProtocol where Self: AptosCapability {
     
     func getAccountResource(
         address: AccountAddressInput,
-        resourceType: MoveStructTag,
+        resourceType: MoveStructId,
         ledgerVersion: String? = nil
     ) async throws -> MoveStructValue {
         let request: RequestOptions = AccountApiOperation.GetAccount.resource(
@@ -40,7 +44,7 @@ public extension AccountAPIProtocol where Self: AptosCapability {
     
     func getAccountResource<Value: Codable & Sendable>(
         address: AccountAddressInput,
-        resourceType: MoveStructTag,
+        resourceType: MoveStructId,
         ledgerVersion: String? = nil
     ) async throws -> Value {
         let request: RequestOptions = AccountApiOperation.GetAccount.resource(
@@ -69,13 +73,19 @@ public extension AccountAPIProtocol where Self: AptosCapability {
         moduleName: String,
         ledgerVersion: String? = nil
     ) async throws -> MoveModuleBytecode {
-        //  TODO: support cache?
+
         let request: RequestOptions = AccountApiOperation.GetAccount.module(
             try AccountAddress.from(address),
             moduleName: moduleName,
             ledgerVersion: ledgerVersion
         )
-        return try await client.get(request).body
+        if ledgerVersion == nil {
+            return try await client.get(request).body
+        }
+        return try await memoizeAsync(
+            client.get,
+            key: "module-\(address)-\(moduleName)",
+            ttlMs: 1000 * 60 * 5)(request).body
     }
     
     func getAccountTransactions(address: AccountAddressInput, page: Pagination? = nil) async throws -> [TransactionResponse] {
@@ -86,7 +96,7 @@ public extension AccountAPIProtocol where Self: AptosCapability {
     }
 }
 
-struct AccountApiOperation {
+private struct AccountApiOperation {
     struct GetAccountPage: RequestOptions, PagenationRequest {
         
         enum ModuleType {
@@ -174,8 +184,8 @@ struct AccountApiOperation {
     enum GetAccount: RequestOptions {
         
         case info(AccountAddress, ledgerVersion: String? = nil)
-        case resource(AccountAddress, resourceType: MoveStructTag, ledgerVersion: String? = nil)
-        case module(AccountAddress, moduleName: MoveStructTag, ledgerVersion: String? = nil)
+        case resource(AccountAddress, resourceType: MoveStructId, ledgerVersion: String? = nil)
+        case module(AccountAddress, moduleName: MoveStructId, ledgerVersion: String? = nil)
         
         var path: String {
             switch self {
