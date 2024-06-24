@@ -14,7 +14,7 @@ Complete the main program architecture, and complete the basic capabilities incl
 Complete the create Account feature and Faucet client supported.
 
 - [x] Support Account Create
-- [ ] Faucet Client for Testnet & Devnet
+- [x] Faucet Client for Testnet & Devnet
 
 
 ## Milestone 3
@@ -22,7 +22,7 @@ Complete the Writing to Chain capabilities, include crypto keys and transaction 
 
 - [x] Private Keys
 - [ ] Passkey & Keyless Support
-- [ ] Transaction submission
+- [x] Transaction submission
 - [ ] View functions
 
 ## More Features
