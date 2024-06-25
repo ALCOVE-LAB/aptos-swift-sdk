@@ -92,13 +92,13 @@ public struct InputGenerateTransactionOptions {
     public var maxGasAmount: UInt64?
     public var gasUnitPrice: UInt64?
     public var expireTimestamp: UInt64?
-    public var accountSequenceNumber: AnyNumber?
+    public var accountSequenceNumber: UInt64?
     
     public init(
         maxGasAmount: UInt64? = nil,
         gasUnitPrice: UInt64? = nil,
         expireTimestamp: UInt64? = nil,
-        accountSequenceNumber: AnyNumber? = nil
+        accountSequenceNumber: UInt64? = nil
     ) {
         self.maxGasAmount = maxGasAmount
         self.gasUnitPrice = gasUnitPrice

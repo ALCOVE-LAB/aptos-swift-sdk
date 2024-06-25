@@ -7,8 +7,8 @@ import Core
 
 extension Transaction {
     public struct Submit: Sendable {
-        let aptosConfig: AptosConfig
-        let client: any ClientInterface
+        public let aptosConfig: AptosConfig
+        public let client: any ClientInterface
     }
 }
 

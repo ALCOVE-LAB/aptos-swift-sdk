@@ -5,8 +5,8 @@ import Core
 
 extension Transaction {
     public struct Build: Sendable {
-        let aptosConfig: AptosConfig
-        let client: any ClientInterface
+        public let aptosConfig: AptosConfig
+        public let client: any ClientInterface
         init(aptosConfig: AptosConfig, client: any ClientInterface) {
             self.aptosConfig = aptosConfig
             self.client = client

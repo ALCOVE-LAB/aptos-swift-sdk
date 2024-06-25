@@ -18,6 +18,7 @@ public enum TransactionBuilderdError: Error {
     case typeMismatch(TypeTag, SimpleEntryFunctionArgumentTypes, Int)
     case missingFeePayerAuthenticator
     case missingAdditionalSignersAuthenticators
+    case missingSequenceNumber
 }
 
 public typealias FunctionParts = (moduleAddress: String, moduleName: String, functionName: String)
@@ -38,7 +39,7 @@ extension MoveFunction {
        return index
     }
 }
-protocol TransactionBuilder {
+protocol TransactionBuilder: GerneralAPIProtocol, AccountAPIProtocol, TransactionAPIProtocol {
     var client: any ClientInterface { get }
     var aptosConfig: AptosConfig { get }
 }
@@ -260,23 +261,30 @@ extension TransactionBuilder {
         options: InputGenerateTransactionOptions?, 
         feePayerAddress: AccountAddressInput?
     ) async throws -> RawTransaction {
-        // TODO:
+
         let getChainId = {  () async throws -> ChainId in 
-            switch aptosConfig.network.apiEnv {
-                case .mainnet: return .init(id: 1)
-                case .testnet: return .init(id: 2)
-                case .randomnet: return .init(id: 70)
-                case .local: return .init(id: 4)
-                default: fatalError("TODO:, getLedgerInfo")
+            if let id =  aptosConfig.network.chainId {
+                return .init(id: id)
             }
+            return ChainId(id: try await getLedgerInfo().chainId)
         }
 
         let getGasUnitPrice = {  () async throws -> UInt64 in 
-            return 100
+            if let gasUnitPrice = options?.gasUnitPrice {
+                return gasUnitPrice
+            }
+            return try await getGasPriceEstimation().gasEstimate
         }
 
         let getSequenceNumberForAny = {  () async throws -> UInt64 in 
-            return 101
+            if let accountSequenceNumber = options?.accountSequenceNumber {
+                return accountSequenceNumber
+            }
+            let sequence = try await getAccountInfo(address: sender).sequenceNumber
+            if let sequenceNumber = UInt64(sequence) {
+                return sequenceNumber
+            }
+            throw TransactionBuilderdError.missingSequenceNumber
         }
 
         let maxGasAmount = options?.maxGasAmount ?? DEFAULT_MAX_GAS_AMOUNT
@@ -444,37 +452,10 @@ export async function generateRawTransaction(args: {
     func fetchFunctionAbi(
         fcuntionParts: FunctionParts
     ) async throws -> MoveFunction? {
-        let module = try await getModule(
-            accountAddress: fcuntionParts.moduleAddress, 
+        let module = try await getAccountModule(
+            address: fcuntionParts.moduleAddress, 
             moduleName: fcuntionParts.moduleName)
         return module.abi?.exposedFunctions.first(where: { $0.name == fcuntionParts.functionName })
-    }
-    
-    func getModule(
-        accountAddress: AccountAddressInput,
-        moduleName: String,
-        options: LedgerVersionArg? = nil
-    ) async throws -> MoveModuleBytecode {
-        if options?.ledgerVersion != nil {
-            return try await getModuleInner(accountAddress: accountAddress, moduleName: moduleName, options: options)
-        }
-        let address = try AccountAddress.from(accountAddress).toString()
-        return try await memoizeAsync(
-            getModuleInner,
-            key: "module-\(address)-\(moduleName)",
-            ttlMs: 1000 * 60 * 5)((accountAddress, moduleName, options))
-    }
-   
-    func getModuleInner(
-        accountAddress: AccountAddressInput,
-        moduleName: String,
-        options: LedgerVersionArg?
-    ) async throws -> MoveModuleBytecode {
-        let address = try AccountAddress.from(accountAddress).toString()
-        let path = "/accounts/\(address)/module/\(moduleName)"
-        var query: Parameter = [:]
-        query["ledger_version"] = options?.ledgerVersion
-        return try await client.get(path: path, query: query).body
     }
 
     func fetchAbi<T>(

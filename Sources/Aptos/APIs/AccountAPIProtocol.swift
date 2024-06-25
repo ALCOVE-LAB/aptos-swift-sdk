@@ -9,7 +9,6 @@ public protocol AccountAPIProtocol {
 }
 
 public extension AccountAPIProtocol {
-    // TODO: ledgerVersion as Types.LedgerVersionArg
    
     func getAccountInfo(
         address: AccountAddressInput,

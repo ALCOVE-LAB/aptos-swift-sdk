@@ -103,12 +103,14 @@ final class AccountTest: XCTestCase {
             senderAuthenticator: authenticator
         )
 
-        // TODO: 
-        // 2. waiting transaction error caution
-
-        let txn = try await aptos.transaction.waitForTransaction(transactionHash: response.hash)
+        let txn: TransactionResponse = try await aptos.transaction.waitForTransaction(transactionHash: response.hash)
         let accountTransactions = try await aptos.account.getAccountTransactions(address: senderAccount.accountAddress)
 
-        // XCTAssertEqual(accountTransactions[0], txn)
+        switch (accountTransactions[0], txn) {
+            case let (.userTransaction(txn1), .userTransaction(txn2)):
+                XCTAssertEqual(txn1, txn2)
+            default:
+                XCTAssert(false)
+        }
     }
 }

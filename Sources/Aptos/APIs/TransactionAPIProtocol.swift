@@ -129,7 +129,6 @@ public extension TransactionAPIProtocol {
         }
 
         while isPending {
-            print("pending... \(Date().timeIntervalSince1970)")
             
             if timeElapsed >= timeoutSecs {
                 break

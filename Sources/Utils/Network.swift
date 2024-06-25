@@ -140,7 +140,7 @@ public struct Network: Sendable {
         }
     }
     
-    public var chainId: Int {
+    public var chainId: UInt8? {
         switch apiEnv {
         case .mainnet:
             return 1
@@ -150,10 +150,8 @@ public struct Network: Sendable {
             return 70
         case .local:
             return 4
-        case .devnet:
-            return 0
-        case .custom:
-            return 0
+        default:
+            return nil
         }
     }
 }

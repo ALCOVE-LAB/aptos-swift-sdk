@@ -1329,7 +1329,7 @@ public struct GasEstimation: Codable, Hashable, Sendable {
     /// The deprioritized estimate for the gas unit price
     public var deprioritizedGasEstimate: Int?
     /// The current estimate for the gas unit price
-    public var gasEstimate: Int
+    public var gasEstimate: UInt64
     /// The prioritized estimate for the gas unit price
     public var prioritizedGasEstimate: Int?
     
@@ -1396,4 +1396,33 @@ public enum AnyPublicKeyVariant: UInt32, Sendable {
 public enum AnySignatureVariant: UInt32, Sendable {
     case ed25519 = 0
     case secp256k1 = 1
+}
+
+
+public enum RoleType: String, Codable, Sendable {
+    case validator
+    case fullNode = "full_node"
+}
+public struct LedgerInfo: Codable, Sendable {
+    public var chainId: UInt8
+    public var epoch: String
+    public var ledgerVersion: String
+    public var oldestLedgerVersion: String
+    public var ledgerTimestamp: String
+    public var nodeRole: RoleType
+    public var oldestBlockHeight: String
+    public var blockHeight: String
+    public var gitHash: String?
+
+    public enum CodingKeys: String, CodingKey {
+        case chainId = "chain_id"
+        case epoch = "epoch"
+        case ledgerVersion = "ledger_version"
+        case oldestLedgerVersion = "oldest_ledger_version"
+        case ledgerTimestamp = "ledger_timestamp"
+        case nodeRole = "node_role"
+        case oldestBlockHeight = "oldest_block_height"
+        case blockHeight = "block_height"
+        case gitHash = "git_hash"
+    }
 }
