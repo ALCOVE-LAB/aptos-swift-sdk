@@ -83,14 +83,10 @@ final class AccountTest: XCTestCase {
     func testFetchAccountTransactions() async throws {
         let config = AptosConfig(network: .init(apiEnv: .local));
         let aptos = Aptos(aptosConfig: config)
-        let senderAccount: Account.Ed25519Account = try Account.fromPrivateKey(.init(Ed25519.privateKey), address: Ed25519.address)
-        // let senderAccount = Account.generate()//(scheme: .secp256k1Ecdsa)
-        // let _ = try await aptos.faucet.fundAccount(accountAddress: "0x5792c985bc96f436270bd2a3c692210b09c7febb8889345ceefdbae4bacfe498", amount: FUND_AMOUNT)
+        let senderAccount = Account.generate()
         let _ = try await aptos.faucet.fundAccount(
           accountAddress: senderAccount.accountAddress, 
           amount: FUND_AMOUNT)
-
-        // TODO: compare the typescript imp that use Account from private key to test step by step
         let bob = Account.generate()
         let rawTxn = try await aptos.transaction.build.simple(
           sender: senderAccount.accountAddress,
@@ -108,7 +104,6 @@ final class AccountTest: XCTestCase {
         )
 
         // TODO: 
-        // 1. account generate issue
         // 2. waiting transaction error caution
 
         let txn = try await aptos.transaction.waitForTransaction(transactionHash: response.hash)

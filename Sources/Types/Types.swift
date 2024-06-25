@@ -1387,3 +1387,13 @@ public enum SigningSchemeInput: Int, Sendable {
     /// For Secp256k1Ecdsa
   case secp256k1Ecdsa = 2
 }
+
+public enum AnyPublicKeyVariant: UInt32, Sendable {
+    case ed25519 = 0
+    case secp256k1 = 1
+}
+
+public enum AnySignatureVariant: UInt32, Sendable {
+    case ed25519 = 0
+    case secp256k1 = 1
+}

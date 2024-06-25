@@ -30,6 +30,7 @@ public protocol PrivateKey: Serializable, Deserializable, Equatable, Hashable, S
     init(_ hexInput: HexInput) throws
     func sign(message: HexInput) throws -> any Signature
     func toUInt8Array() -> [UInt8]
+    func toString() -> String
     func publicKey() throws -> any PublicKey
 }
 

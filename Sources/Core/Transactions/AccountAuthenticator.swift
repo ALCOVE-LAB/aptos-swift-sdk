@@ -118,48 +118,23 @@ extension AccountAuthenticator {
         }
     }
     public struct SingleKey: Serializable, Deserializable {
-        public enum Variant: UInt32 {
-            case ed25519 = 0
-            case secp256k1 = 1
-        }
-        public let variant: Variant
-        public let publicKey: any PublicKey
-        public let signature: any Signature
+        public let publicKey: AnyPublicKey
+        public let signature: AnySignature
 
-        public init(publicKey: any PublicKey, signature: any Signature) {
+        public init(publicKey: AnyPublicKey, signature: AnySignature) {
             self.publicKey = publicKey
             self.signature = signature
-            switch publicKey {
-                case is Ed25519PublicKey:
-                    self.variant = .ed25519
-                case is Secp256k1PublicKey:
-                    self.variant = .secp256k1
-                default:
-                    fatalError("Invalid public key type")
-            }
         }
 
         public func serialize(serializer: Serializer) throws {
-            try serializer.serializeVariantIndex(value: variant.rawValue)
             try publicKey.serialize(serializer: serializer)
             try signature.serialize(serializer: serializer)
         }
 
         public static func deserialize(deserializer: Deserializer) throws -> SingleKey {
-            let variantIndex = try deserializer.deserializeVariantIndex()
-            guard let variant = Variant(rawValue: variantIndex) else {
-                throw AccountAuthenticatorError.invalidSingleKeyVariantIndex
-            }
-            switch variant {
-                case .ed25519:
-                    let publicKey = try Ed25519PublicKey.deserialize(deserializer: deserializer)
-                    let signature = try Ed25519Signature.deserialize(deserializer: deserializer)
-                    return SingleKey(publicKey: publicKey, signature: signature)
-                case .secp256k1:
-                    let publicKey = try Secp256k1PublicKey.deserialize(deserializer: deserializer)
-                    let signature = try Secp256k1Signature.deserialize(deserializer: deserializer)
-                    return SingleKey(publicKey: publicKey, signature: signature)
-            }
+            let publicKey = try deserializer.deserialize(AnyPublicKey.self)
+            let signature = try deserializer.deserialize(AnySignature.self)
+            return SingleKey(publicKey: publicKey, signature: signature)
         }
     }
 

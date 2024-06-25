@@ -3,6 +3,7 @@ import Foundation
 import Types 
 import BCS
 import Crypto
+import CryptoSwift
 
 public enum AuthenticationKeyError: Error {
     case invalidLength
@@ -45,9 +46,7 @@ public struct AuthenticationKey: Serializable {
     public static func fromSchemeAndBytes(scheme: AuthenticationKeyScheme, input: HexInput) throws -> AuthenticationKey {
         let inputBytes = try Hex.fromHexInput(input).toUInt8Array()
         let hashInput = inputBytes + [UInt8(scheme.rawValue)]
-        var hash = SHA256()
-        hash.update(data: hashInput)
-        let hashDigest = hash.finalize()
+        let hashDigest = CryptoSwift.Digest.sha3(hashInput, variant: SHA3.Variant.sha256)
         return try AuthenticationKey(hashDigest.makeIterator().map { $0 })
     }
 

@@ -8,6 +8,12 @@ public struct CreateAccountFromPrivateKeyArgs {
     public let privateKey: any PrivateKey
     public let address: AccountAddressInput?
     public let legacy: Bool?
+
+    public init(privateKey: any PrivateKey, address: AccountAddressInput? = nil, legacy: Bool? = nil) {
+        self.privateKey = privateKey
+        self.address = address
+        self.legacy = legacy
+    }
 }
 
 public protocol GenerateAccountProtocol {
@@ -26,6 +32,11 @@ public struct GenerateAccountArgs: GenerateAccountProtocol {
     public let scheme: SigningSchemeInput
     public let legacy: Bool? 
 
+    public init(scheme: SigningSchemeInput, legacy: Bool? = nil) {
+        self.scheme = scheme
+        self.legacy = legacy
+    }
+
     static let ed25519Account = GenerateAccountArgs(scheme: .ed25519, legacy: true)
 }
 
@@ -38,7 +49,7 @@ public struct PrivateKeyFromDerivationPathArgs: GenerateAccountProtocol, Private
 }
 
 public protocol AccountProtocol: Sendable {
-    var privaeKey: any PrivateKey { get }
+    var privateKey: any PrivateKey { get }
     var publicKey: any PublicKey { get }
     var accountAddress: AccountAddress { get }
     var signingScheme: SigningScheme { get }
@@ -86,11 +97,7 @@ extension Account {
     public static func fromPrivateKey(_ privateKey: Ed25519PrivateKey, address: AccountAddressInput? = nil) throws -> Ed25519Account {  
         try fromPrivateKey(.init(privateKey: privateKey, address: address, legacy: true)) as! Ed25519Account
     }
-
-    public static func fromPrivateKey(_ privateKey: Ed25519PrivateKey, address: AccountAddressInput? = nil) throws -> SingleKeyAccount {
-         try fromPrivateKey(.init(privateKey: privateKey, address: address, legacy: false)) as! SingleKeyAccount
-    }
-
+    
     public static func fromPrivateKey(_ privateKey: any PrivateKey, address: AccountAddressInput? = nil) throws -> SingleKeyAccount {
         try fromPrivateKey(.init(privateKey: privateKey, address: address, legacy: false)) as! SingleKeyAccount
     }
@@ -108,11 +115,11 @@ extension Account {
         return try fromDerivationPath(args as GenerateAccountProtocol & PrivateKeyFromDerivationPathProtocol)  
     }
 
-    public static func fromDerivationPath(_ mnemonic: String, path: String) throws -> Ed25519Account {
+    public static func fromDerivationPath(mnemonic: String, path: String) throws -> Ed25519Account {
         return try fromDerivationPath(.init(scheme: .ed25519, legacy: true, path: path, mnemonic: mnemonic)) as! Ed25519Account
     }
 
-    public static func fromDerivationPath(scheme: SigningSchemeInput = .ed25519, _ mnemonic: String, path: String) throws -> SingleKeyAccount {
+    public static func fromDerivationPath(scheme: SigningSchemeInput = .ed25519, mnemonic: String, path: String) throws -> SingleKeyAccount {
         return try fromDerivationPath(.init(scheme: scheme, legacy: false, path: path, mnemonic: mnemonic)) as! SingleKeyAccount
     }
 }
@@ -130,7 +137,7 @@ extension Account {
     }
 
     public struct Ed25519Account: AccountProtocol {
-        public var privaeKey: any PrivateKey 
+        public var privateKey: any PrivateKey 
         public var publicKey: any PublicKey 
         public var accountAddress: AccountAddress 
 
@@ -139,8 +146,8 @@ extension Account {
         }
 
         public init(privateKey: Ed25519PrivateKey, address: AccountAddressInput? = nil) throws {
-            self.privaeKey = privateKey
-            guard let publicKey = try? privaeKey.publicKey() as? Ed25519PublicKey else {
+            self.privateKey = privateKey
+            guard let publicKey = try? privateKey.publicKey() as? Ed25519PublicKey else {
                 throw AccountError.generateError
             }
             self.publicKey = publicKey
@@ -156,7 +163,7 @@ extension Account {
         }
 
         public func signWithAuthenticator(message: HexInput) throws -> AccountAuthenticator {
-            let signature = try privaeKey.sign(message: message) as! Ed25519Signature
+            let signature = try privateKey.sign(message: message) as! Ed25519Signature
             return  AccountAuthenticator.ed25519(.init(publicKey: rawPublicKey, signature: signature))
         }
 
@@ -172,29 +179,28 @@ extension Account {
     }
 
     public struct SingleKeyAccount: AccountProtocol {
-        public var privaeKey: any PrivateKey 
-        public var publicKey: any PublicKey 
+        public var privateKey: any PrivateKey 
+        public var publicKey: any PublicKey
         public var accountAddress: AccountAddress 
         public var signingScheme: SigningScheme {
             return .singleKey
         }
 
         public init(privateKey: any PrivateKey, address: AccountAddressInput? = nil) throws {
-            self.privaeKey = privateKey
-            self.publicKey = try privaeKey.publicKey() 
+            self.privateKey = privateKey
+            let innerPublicKey = AnyPublicKey(publicKey: try privateKey.publicKey())
+            self.publicKey = innerPublicKey
             if case let .some(address) = address {
                 self.accountAddress = try AccountAddress.from(address)
             } else {
-                self.accountAddress = try AuthenticationKey.fromSchemeAndBytes(
-                    scheme: .signing(.singleKey),
-                    input: self.publicKey.toUInt8Array()
-                ).derivedAddress();
+                self.accountAddress = try innerPublicKey.authKey().derivedAddress()
             }
         }
 
         public func signWithAuthenticator(message: HexInput) throws -> AccountAuthenticator {
-            let signature = try privaeKey.sign(message: message)
-            return  AccountAuthenticator.singleKey(.init(publicKey: publicKey, signature: signature))
+            let signature = try privateKey.sign(message: message)
+            let anySignature = AnySignature(signature: signature)
+            return  AccountAuthenticator.singleKey(.init(publicKey: publicKey as! AnyPublicKey, signature: anySignature))
         }
 
         public static func generate(scheme: SigningSchemeInput) -> SingleKeyAccount {

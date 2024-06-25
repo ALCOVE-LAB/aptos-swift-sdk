@@ -44,30 +44,18 @@ class AuthenticationKeyTest: XCTestCase {
         XCTAssertEqual(authKeyDeserialized.data.toString(), Ed25519.authKey)
     }
 
-    /*
-    
-  it("should create AuthenticationKey from Ed25519PublicKey", () => {
-    const publicKey = new Ed25519PublicKey(ed25519.publicKey);
-    const authKey = publicKey.authKey();
-    expect(authKey).toBeInstanceOf(AuthenticationKey);
-    expect(authKey.data.toString()).toEqual(ed25519.authKey);
-  });
-
-  it("should create AuthenticationKey from MultiPublicKey", () => {
-    // create the MultiPublicKey
-    const edPksArray = [];
-    for (let i = 0; i < multiEd25519PkTestObject.public_keys.length; i += 1) {
-      edPksArray.push(new Ed25519PublicKey(multiEd25519PkTestObject.public_keys[i]));
+    func testShouldCreateAuthenticationKeyFromEd25519PublicKey() throws {
+        let publicKey = try Ed25519PublicKey(Ed25519.publicKey)
+        let authKey = try publicKey.authKey()
+        XCTAssertEqual(authKey.data.toString(), Ed25519.authKey)
     }
 
-    const pubKeyMultiSig = new MultiEd25519PublicKey({
-      publicKeys: edPksArray,
-      threshold: multiEd25519PkTestObject.threshold,
-    });
+    func testShouldCreateAuthenticationKeyFromMultiPublicKey() throws {
 
-    const authKey = pubKeyMultiSig.authKey();
-    expect(authKey).toBeInstanceOf(AuthenticationKey);
-    expect(authKey.data.toString()).toEqual("0xa81cfac3df59920593ff417b45fc347ead3d88f8e25112c0488d34d7c9eb20af");
-  });
-    */
+        let edPksArray = try MultiEd25519PublicKey(
+          publicKeys: MultiEd25519.publicKeys.map({ try Ed25519PublicKey($0)}),
+          threshold: MultiEd25519.threshold)
+        let authKey = try edPksArray.authKey()
+        XCTAssertEqual(authKey.data.toString(), "0xa81cfac3df59920593ff417b45fc347ead3d88f8e25112c0488d34d7c9eb20af")
+    }
 }
