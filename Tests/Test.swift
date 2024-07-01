@@ -4,6 +4,6 @@ import XCTest
 
 final class Test: XCTestCase {
     func testExample() {
-        Aptos.hello()
+
     }
 }

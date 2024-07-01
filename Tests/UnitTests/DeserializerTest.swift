@@ -318,16 +318,5 @@ class DeserializerTest: XCTestCase {
         XCTAssertEqual(deserializedMoveStructB.name, "ghi", "should match")
         XCTAssertEqual(deserializedMoveStructB.description, "789", "should match")
         XCTAssertEqual(deserializedMoveStructB.vectorU8, [9, 10, 11, 12], "should match")
-            
     }
-    /*
-    convert typescript into swift
-
-  it("deserializes and composes an abstract Deserializable class instance from composed deserialize calls", () => {
-
-
-    */
-
-
-
 }

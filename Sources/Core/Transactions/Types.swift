@@ -109,11 +109,6 @@ public struct InputGenerateTransactionOptions {
 
 
 public typealias AnyTransactionPayloadInstance = TransactionPayload
-// extension TransactionPayload: AnyTransactionPayloadInstance {}
-// extension TransactionPayload.EntryFunction: AnyTransactionPayloadInstance {}
-// extension TransactionPayload.Script: AnyTransactionPayloadInstance {}
-// extension TransactionPayload.MultiSig: AnyTransactionPayloadInstance {}
-
 
 public protocol InputGenerateTransactionPayloadData {}
 extension InputEntryFunctionData: InputGenerateTransactionPayloadData {}

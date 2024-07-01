@@ -218,34 +218,6 @@ class AccountAddressTest: XCTestCase {
 
     }
 
-    /*
-
-describe("AccountAddress fromRelaxed", () => {
-  it("parses special address: 0x1", () => {
-    expect(AccountAddress.from(ADDRESS_ONE.longWith0x).toString()).toBe(ADDRESS_ONE.shortWith0x);
-    expect(AccountAddress.from(ADDRESS_ONE.longWithout0x).toString()).toBe(ADDRESS_ONE.shortWith0x);
-    expect(AccountAddress.from(ADDRESS_ONE.shortWith0x).toString()).toBe(ADDRESS_ONE.shortWith0x);
-    expect(AccountAddress.from(ADDRESS_ONE.shortWithout0x).toString()).toBe(ADDRESS_ONE.shortWith0x);
-    expect(AccountAddress.from(ADDRESS_ONE.bytes).toString()).toBe(ADDRESS_ONE.shortWith0x);
-  });
-
-  it("parses non-special address: 0x10", () => {
-    expect(AccountAddress.from(ADDRESS_TEN.longWith0x).toString()).toBe(ADDRESS_TEN.longWith0x);
-    expect(AccountAddress.from(ADDRESS_TEN.longWithout0x).toString()).toBe(ADDRESS_TEN.longWith0x);
-    expect(AccountAddress.from(ADDRESS_TEN.shortWith0x).toString()).toBe(ADDRESS_TEN.longWith0x);
-    expect(AccountAddress.from(ADDRESS_TEN.shortWithout0x).toString()).toBe(ADDRESS_TEN.longWith0x);
-    expect(AccountAddress.from(ADDRESS_TEN.bytes).toString()).toBe(ADDRESS_TEN.longWith0x);
-  });
-
-  it("parses non-special address: 0xca843279e3427144cead5e4d5999a3d0ca843279e3427144cead5e4d5999a3d0", () => {
-    expect(AccountAddress.from(ADDRESS_OTHER.longWith0x).toString()).toBe(ADDRESS_OTHER.longWith0x);
-    expect(AccountAddress.from(ADDRESS_OTHER.longWithout0x).toString()).toBe(ADDRESS_OTHER.longWith0x);
-    expect(AccountAddress.from(ADDRESS_OTHER.bytes).toString()).toBe(ADDRESS_OTHER.longWith0x);
-  });
-});
-
-    */
-
     func testAccountAddressFromRelaxed() {
         XCTAssertEqual(try AccountAddress.from(ADDRESS_ONE.longWith0x).toString(), ADDRESS_ONE.shortWith0x)
         XCTAssertEqual(try AccountAddress.from(ADDRESS_ONE.longWithout0x).toString(), ADDRESS_ONE.shortWith0x)

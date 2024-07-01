@@ -7,10 +7,6 @@ import OpenAPIURLSession
 import Types
 
 public struct Aptos: Sendable {
-    public static func hello() {
-        print("Hello from Aptos!")
-    }
-    
     public let aptosConfig: AptosConfig
     public let account: AccountApi
     public let transaction: Transaction
