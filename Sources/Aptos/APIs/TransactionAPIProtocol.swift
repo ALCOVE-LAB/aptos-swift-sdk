@@ -36,7 +36,7 @@ public protocol TransactionAPIProtocol: Sendable {
 
 public extension TransactionAPIProtocol {
     
-    func getTransactions(page: Pagination?) async throws -> [TransactionResponse] {
+    func getTransactions(page: Pagination? = nil) async throws -> [TransactionResponse] {
         var request: PagenationRequest & RequestOptions = TransactionApiOperation.GetTransactionsPage(page: page)
         return try await client.sendPaginateRequest(&request).body
     }

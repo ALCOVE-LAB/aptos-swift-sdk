@@ -329,12 +329,8 @@ extension TransactionBuilder {
             txnAuthenticator = .multiAgent(.init(
                 sender: senderAuthenticator, secondarySignerAddresses: secondarySignerAddresses, secondarySigners: additionalSignersAuthenticators ?? []))
         } else if case let .ed25519(auth) = senderAuthenticator {
-            print("generateSignedTransaction: ed25519")
-            
             txnAuthenticator = .ed25519(.init(publicKey: auth.publicKey, signature: auth.rawSignature))
         } else {
-            print("generateSignedTransaction: singleSender")
-
             txnAuthenticator = .singleSender(.init(sender: senderAuthenticator))
         }
         return try SignedTransaction(rawTransaction: transaction.rawTransaction, authenticator: txnAuthenticator).bcsToBytes()

@@ -258,7 +258,7 @@ public struct MoveStructField: Codable, Hashable, Sendable {
 }
 
 
-public enum TransactionResponse: Codable, Sendable {
+public enum TransactionResponse: Codable, Equatable, Sendable {
     
     case blockMetadataTransaction(BlockMetadataTransaction)
     
@@ -306,6 +306,40 @@ public enum TransactionResponse: Codable, Sendable {
         case .validatorTransaction(let value):
             value.vmStatus
             
+        }
+    }
+
+    public var version: String {
+         switch self {
+        case .blockMetadataTransaction(let value):
+            value.version
+        case .genesisTransaction(let value):
+            value.version
+        case .pendingTransaction(_):
+            ""
+        case .stateCheckpointTransaction(let value):
+            value.version
+        case .userTransaction(let value):
+            value.version
+        case .validatorTransaction(let value):
+            value.version
+        }
+    }
+
+    public var hash: String {
+         switch self {
+        case .blockMetadataTransaction(let value):
+            value.hash
+        case .genesisTransaction(let value):
+            value.hash
+        case .pendingTransaction(let value):
+            value.hash
+        case .stateCheckpointTransaction(let value):
+            value.hash
+        case .userTransaction(let value):
+            value.hash
+        case .validatorTransaction(let value):
+            value.hash
         }
     }
     
@@ -357,6 +391,25 @@ public enum TransactionResponse: Codable, Sendable {
             try value.encode(to: encoder)
         case .validatorTransaction(let value):
             try value.encode(to: encoder)
+        }
+    }
+
+    public static func == (lhs: TransactionResponse, rhs: TransactionResponse) -> Bool {
+        switch (lhs, rhs) {
+        case (.blockMetadataTransaction(let lhsValue), .blockMetadataTransaction(let rhsValue)):
+            return lhsValue == rhsValue
+        case (.genesisTransaction(let lhsValue), .genesisTransaction(let rhsValue)):
+            return lhsValue == rhsValue
+        case (.pendingTransaction(let lhsValue), .pendingTransaction(let rhsValue)):
+            return lhsValue == rhsValue
+        case (.stateCheckpointTransaction(let lhsValue), .stateCheckpointTransaction(let rhsValue)):
+            return lhsValue == rhsValue
+        case (.userTransaction(let lhsValue), .userTransaction(let rhsValue)):
+            return lhsValue == rhsValue
+        case (.validatorTransaction(let lhsValue), .validatorTransaction(let rhsValue)):
+            return lhsValue == rhsValue
+        default:
+            return false
         }
     }
 }
@@ -414,7 +467,7 @@ public struct BlockMetadataTransaction: Codable, Hashable, Sendable {
         case epoch
         case round
         case events
-        case previousBlockVotesBitvec = "previousBlockVotesBitvec"
+        case previousBlockVotesBitvec = "previous_block_votes_bitvec"
         case proposer
         case failedProposerIndices = "failed_proposer_indices"
         case timestamp
@@ -470,7 +523,7 @@ public struct GenesisTransaction: Codable, Hashable, Sendable {
 
 /// A transaction waiting in mempool
 public struct PendingTransaction: Codable, Hashable, Sendable {
-    
+
     public var hash: String
     
     public var sender: String
