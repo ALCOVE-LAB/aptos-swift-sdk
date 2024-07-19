@@ -8,7 +8,7 @@ Complete the main program architecture, and complete the basic capabilities incl
 - [x] Clients & RESTful APIs
 - [x] Account & Transaction, support read Account info and Transaction
 - [x] Basic Unit Test
-- [ ] Demo, the fully demo by usage
+- [x] Demo, the fully demo by usage
 
 ## Milestone 2
 Complete the create Account feature and Faucet client supported.
@@ -21,9 +21,9 @@ Complete the create Account feature and Faucet client supported.
 Complete the Writing to Chain capabilities, include crypto keys and transaction submission.
 
 - [x] Private Keys
-- [ ] Passkey & Keyless Support
+- [x] Passkey & Keyless Support
 - [x] Transaction submission
-- [ ] View functions
+- [x] View functions
 
 ## More Features
 - GraphQL Indexer API 

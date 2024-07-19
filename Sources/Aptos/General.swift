@@ -1,16 +1,17 @@
 
+
 import Foundation
 import Clients
 import OpenAPIRuntime
 import Types
 
 extension Aptos {
-    public struct Account: Sendable, AccountAPIProtocol {
-        let config: AptosConfig
+    public struct General: Sendable, GerneralAPIProtocol, TransactionBuilder {
+        let aptosConfig: AptosConfig
         public let client: any ClientInterface
         
         init(config: AptosConfig) {
-            self.config = config
+            self.aptosConfig = config
 
             let middleware = ClientConfigMiddleware(
                 network: config.network,

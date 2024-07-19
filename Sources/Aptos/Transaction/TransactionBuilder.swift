@@ -11,7 +11,9 @@ import CryptoSwift
 public enum TransactionBuilderdError: Error {
     case invalidFunctionId
     case notFoundEntryFunctionABI(MoveFunctionId)
+    case notFoundViewFunctionABI(MoveFunctionId)
     case invalidEntryFunction(MoveFunctionId)
+    case invalidViewFunction(MoveFunctionId)
     case typeArgumentCountMismatch(expected: Int, received: Int)
     case tooManyArguments(String, Int)
     case tooFewArguments(String, Int)
@@ -212,6 +214,7 @@ extension TransactionBuilder {
         }
         return try await generateTransactionPayloadWithABI(args.withABI(functionAbi))
     }
+
     
     func generateTransactionPayloadWithABI(_ args: InputGenerateTransactionPayloadDataWithABI) async throws -> TransactionPayload {
         let functionAbi = args.abi
@@ -253,6 +256,50 @@ extension TransactionBuilder {
                 )
         }
         return TransactionPayload.entryFunction(entryFunctionPayload)
+    }
+
+
+    func generateViewFunctionPayload(_ args: InputViewFunctionDataWithRemoteABI) async throws -> TransactionPayload.EntryFunction {
+        let functionParts = try args.function.getFunctionParts()
+        let functionAbi = try await fetchAbi(
+            key: "view-function",
+            functionParts: functionParts,
+            abi: args.abi,
+            fetch: fetchViewFunctionAbi
+        )
+        return try await generateViewFunctionPayloadWithABI(args.withABI(functionAbi))
+    }
+
+    func generateViewFunctionPayloadWithABI(_ args: InputViewFunctionDataWithABI) async throws -> TransactionPayload.EntryFunction {
+        let functionAbi = args.abi
+        let functionParts = try args.function.getFunctionParts()
+
+        let typeArguments = try standardizeTypeTags(args.typeArguments)
+        
+        if typeArguments.count != functionAbi.typeParameters.count {
+            throw TransactionBuilderdError.typeArgumentCountMismatch(expected: functionAbi.typeParameters.count, received: typeArguments.count)
+        }
+
+        let functionArguments = try args.functionArguments.enumerated().map { (i, arg) in
+            return try convertArgument(
+                functionName: args.function, 
+                functionAbi: functionAbi, 
+                arg: arg,
+                position: i, 
+                genericTypeParams: typeArguments)
+        }
+
+        if functionArguments.count != functionAbi.parameters.count {
+            throw TransactionBuilderdError.tooFewArguments(
+                "\(functionParts.moduleAddress)::\(functionParts.moduleName)::\(functionParts.functionName)",
+                functionAbi.parameters.count)
+        }
+
+        return try .build(
+            moduleId: "\(functionParts.moduleAddress)::\(functionParts.moduleName)",
+            functionName: functionParts.functionName,
+            typeArgs: typeArguments,
+            args: functionArguments)
     }
 
     func generateRawTransaction(
@@ -356,6 +403,30 @@ extension TransactionBuilder {
         }
 
         return .init(signers: numSigners, typeParameters: functionAbi.genericTypeParams, parameters: params)
+    }
+
+    func fetchViewFunctionAbi(
+        _ functionParts: FunctionParts
+    ) async throws -> ViewFunctionABI {
+        let functionId = functionParts.moduleAddress + ":" + functionParts.moduleName + ":" + functionParts.functionName
+        let functionAbi = try await fetchFunctionAbi(fcuntionParts: functionParts)
+        guard let functionAbi = functionAbi else {
+            throw TransactionBuilderdError.notFoundViewFunctionABI(functionId)
+        }
+       
+        if !functionAbi.isView {
+            throw TransactionBuilderdError.invalidViewFunction(functionId)
+        }
+
+        var params: [TypeTag] = [];
+        for param in functionAbi.params {
+            params.append(try TypeTag.parseTypeTag(param, allowGenerics: true))
+        }
+        var returnTypes: [TypeTag] = [];
+        for returnType in functionAbi.return {
+            returnTypes.append(try TypeTag.parseTypeTag(returnType, allowGenerics: true))
+        }
+        return .init(typeParameters: functionAbi.genericTypeParams, parameters: params, returnTypes: returnTypes)
     }
 
     func fetchFunctionAbi(

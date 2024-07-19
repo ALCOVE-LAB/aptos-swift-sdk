@@ -319,21 +319,30 @@ public struct InputViewFunctionData {
         self.abi = abi
     }
 
+    public func remoteABI(with aptosConfig: AptosConfig) -> InputViewFunctionDataWithRemoteABI {
+        return InputViewFunctionDataWithRemoteABI(
+            function: function,
+            typeArguments: typeArguments,
+            functionArguments: functionArguments ?? [],
+            abi: abi,
+            aptosConfig: aptosConfig
+        )
+    }
 }
 
 public struct InputViewFunctionDataWithRemoteABI {
     public var function: MoveFunctionId
-    public var typeArguments: [TypeTag]?
-    public var functionArguments: [AnyFunctionArgumentTypes]?
+    public var typeArguments: [TypeArgument]?
+    public var functionArguments: [AnyFunctionArgumentTypes]
     public var abi: ViewFunctionABI?
-    public var aptosConfig: Any
+    public var aptosConfig: AptosConfig
     
     public init(
         function: MoveFunctionId,
-        typeArguments: [TypeTag]? = nil,
-        functionArguments: [AnyFunctionArgumentTypes]? = nil,
+        typeArguments: [TypeArgument]? = nil,
+        functionArguments: [AnyFunctionArgumentTypes] = [],
         abi: ViewFunctionABI? = nil,
-        aptosConfig: Any
+        aptosConfig: AptosConfig
     ) {
         self.function = function
         self.typeArguments = typeArguments
@@ -341,18 +350,27 @@ public struct InputViewFunctionDataWithRemoteABI {
         self.abi = abi
         self.aptosConfig = aptosConfig
     }
+
+    public func withABI(_ abi: ViewFunctionABI) -> InputViewFunctionDataWithABI {
+        return InputViewFunctionDataWithABI(
+            function: function,
+            typeArguments: typeArguments,
+            functionArguments: functionArguments,
+            abi: abi
+        )
+    }
 }
 
 public struct InputViewFunctionDataWithABI {
     public var function: MoveFunctionId
-    public var typeArguments: [TypeTag]?
-    public var functionArguments: [AnyFunctionArgumentTypes]?
+    public var typeArguments: [TypeArgument]?
+    public var functionArguments: [AnyFunctionArgumentTypes]
     public var abi: ViewFunctionABI
     
     public init(
         function: MoveFunctionId,
-        typeArguments: [TypeTag]? = nil,
-        functionArguments: [AnyFunctionArgumentTypes]? = nil,
+        typeArguments: [TypeArgument]? = nil,
+        functionArguments: [AnyFunctionArgumentTypes] = [],
         abi: ViewFunctionABI
     ) {
         self.function = function

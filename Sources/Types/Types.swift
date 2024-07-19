@@ -54,9 +54,11 @@ public protocol PagenationRequest {
 
 public struct LedgerVersionArg {
     public var ledgerVersion: AnyNumber?
+
+    public init(ledgerVersion: AnyNumber? = nil) {
+        self.ledgerVersion = ledgerVersion
+    }
 }
-
-
 
 public enum ScriptTransactionArgumentVariants: UInt32 {
     case U8 = 0
@@ -123,13 +125,14 @@ public struct AccountData: Codable, Hashable, Sendable {
 
 
 
-public struct WaitForTransactionOptions {
+public struct WaitForTransactionOptions: Sendable {
     public static let DEFAULT_TXN_TIMEOUT_SEC = 20
     
     public let timeoutSecs: Int?
     public let checkSuccess: Bool?
     public let waitForIndexer: Bool?
 }
+
 
 public typealias MoveStructValue = OpenAPIRuntime.OpenAPIObjectContainer
 public typealias MoveStructId = String
@@ -138,7 +141,46 @@ public typealias EntryFunctionId = String
 public typealias HexEncodedBytes = String
 public typealias IdentifierWrapper = String
 public typealias MoveModuleId = String
-public typealias MoveType = String
+
+
+public typealias MoveUInt8Type = UInt8
+public typealias MoveUInt16Type = UInt16
+public typealias MoveUInt32Type = UInt32
+public typealias MoveUInt64Type = UInt64
+public typealias MoveUInt128Type = String
+public typealias MoveUInt256Type = String
+public typealias MoveAddressType = String
+public typealias MoveObjectType = String
+public typealias MoveOptionType<T: MoveType> = Optional<T>
+
+public protocol MoveType: Codable,  Sendable {}
+extension MoveUInt8Type: MoveType {}
+extension MoveUInt16Type: MoveType {}
+extension MoveUInt32Type: MoveType {}
+extension MoveUInt64Type: MoveType {}
+extension MoveUInt128Type: MoveType {}
+// equivalence String: MoveType {}
+// extension MoveUInt256Type: MoveType {}
+// extension MoveAddressType: MoveType {}
+// extension MoveObjectType: MoveType {}
+extension Array: MoveType where Element: MoveType {}
+
+public protocol MoveValue: Codable, Sendable {}
+extension Bool: MoveValue {}
+extension String: MoveValue {}
+extension MoveUInt8Type: MoveValue {}
+extension MoveUInt16Type: MoveValue {}
+extension MoveUInt32Type: MoveValue {}
+extension MoveUInt64Type: MoveValue {}
+// equivalence String: MoveType {}
+// extension MoveUInt128Type: MoveValue {}
+// extension MoveUInt256Type: MoveValue {}
+// extension MoveAddressType: MoveValue {}
+// extension MoveObjectType: MoveValue {}
+// extension MoveStructId: MoveValue {}
+extension MoveOptionType: MoveValue {}
+extension Array: MoveValue where Element: MoveValue {}
+
 
 public struct MoveResource: Codable, Hashable, Sendable {
     public var type: MoveStructId
@@ -201,9 +243,9 @@ public struct MoveFunction: Codable, Hashable, Sendable {
     public var isView: Bool
     
     public var genericTypeParams: [MoveFunctionGenericTypeParam]
-    public var params: [MoveType]
+    public var params: [String]
     
-    public var `return`: [MoveType]
+    public var `return`: [String]
     
     public enum CodingKeys: String, CodingKey {
         case name
@@ -249,7 +291,7 @@ public struct MoveStructGenericTypeParam: Codable, Hashable, Sendable {
 public struct MoveStructField: Codable, Hashable, Sendable {
     
     public var name: String
-    public var `type`: MoveType
+    public var `type`: String
     
     public enum CodingKeys: String, CodingKey {
         case name
@@ -738,7 +780,7 @@ public struct Event: Codable, Hashable, Sendable {
     
     public var guid: EventGuid
     public var sequenceNumber: String
-    public var type: MoveType
+    public var type: String
     public var data: Event.Data
     
     public enum CodingKeys: String, CodingKey {
@@ -1082,7 +1124,7 @@ public struct EntryFunction: Codable, Hashable, Sendable {
     public typealias Argument = OpenAPIRuntime.OpenAPIValueContainer
     public var function: EntryFunctionId
     /// Type arguments of the function
-    public var typeArguments: [MoveType]
+    public var typeArguments: [String]
     /// Arguments of the function
     public var arguments: [EntryFunction.Argument]
     
@@ -1099,7 +1141,7 @@ public struct Script: Codable, Hashable, Sendable {
     public typealias Argument = OpenAPIRuntime.OpenAPIValueContainer
     public var code: MoveScriptBytecode
     /// Type arguments of the function
-    public var typeArguments: [MoveType]
+    public var typeArguments: [String]
     /// Arguments of the function
     public var arguments: [Script.Argument]
     
@@ -1451,7 +1493,6 @@ public enum AnySignatureVariant: UInt32, Sendable {
     case secp256k1 = 1
 }
 
-
 public enum RoleType: String, Codable, Sendable {
     case validator
     case fullNode = "full_node"
@@ -1479,3 +1520,45 @@ public struct LedgerInfo: Codable, Sendable {
         case gitHash = "git_hash"
     }
 }
+
+public struct Block: Codable, Sendable {
+    public var blockHeight: String
+    public var blockHash: String
+    public var blockTimestamp: String
+    public var firstVersion: String
+    public var lastVersion: String
+    public var transactions: [TransactionResponse]?
+
+    public enum CodingKeys: String, CodingKey {
+        case blockHeight = "block_height"
+        case blockHash = "block_hash"
+        case blockTimestamp = "block_timestamp"
+        case firstVersion = "first_version"
+        case lastVersion = "last_version"
+        case transactions = "transactions"
+    }
+}
+
+public struct TableItemRequest: Sendable {
+    public var keyType: MoveType
+    public var valueType: MoveValue
+    public var key: Codable & Sendable
+
+    public init(keyType: MoveType, valueType: MoveValue, key: Codable & Sendable) {
+        self.keyType = keyType
+        self.valueType = valueType
+        self.key = key
+    }
+
+    public var json: [String: Sendable] {
+        return [
+            "key_type": keyType,
+            "value_type": valueType,
+            "key": key
+        ]
+    }
+}
+
+
+
+

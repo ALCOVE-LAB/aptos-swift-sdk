@@ -74,7 +74,6 @@ public extension TransactionAPIProtocol {
 
     }
     
-    @Sendable
     func waitForTransaction(
         transactionHash: HexInput,
         options: WaitForTransactionOptions? = nil
