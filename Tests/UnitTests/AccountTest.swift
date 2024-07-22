@@ -109,17 +109,17 @@ class AccountTest: XCTestCase {
 
     func testFromDerivationPath() async throws {
       try test("should create a new account from bip44 path and mnemonics with legacy Ed25519", {
-        let newAccount = try Account.fromDerivationPath(mnemonic: Wallet.mnemonic, path: Wallet.path)
+        let newAccount = try Account.fromDerivationPath(Wallet.path, mnemonic: Wallet.mnemonic)
         XCTAssertEqual(newAccount.accountAddress.toString(), Wallet.address)
       })
 
       try test("should create a new account from bip44 path and mnemonics with single signer Ed25519", {
-        let newAccount = try Account.fromDerivationPath(scheme: .ed25519, mnemonic: Ed25519Wallet.mnemonic, path: Ed25519Wallet.path)
+        let newAccount = try Account.fromDerivationPath(Ed25519Wallet.path, mnemonic: Ed25519Wallet.mnemonic, scheme: .ed25519)
         XCTAssertEqual(newAccount.accountAddress.toString(), Ed25519Wallet.address)
       })
 
       try test("should create a new account from bip44 path and mnemonics with single signer secp256k1", {
-        let newAccount = try Account.fromDerivationPath(scheme: .secp256k1Ecdsa, mnemonic: Secp256k1Wallet.mnemonic, path: Secp256k1Wallet.path)
+        let newAccount = try Account.fromDerivationPath(Secp256k1Wallet.path, mnemonic: Secp256k1Wallet.mnemonic, scheme: .secp256k1Ecdsa)
         XCTAssertEqual(newAccount.accountAddress.toString(), Secp256k1Wallet.address)
       })
 

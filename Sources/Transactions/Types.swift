@@ -4,6 +4,7 @@ import BigInt
 import BCS
 import Types
 import Core
+import Utils
 
 public protocol AnyFunctionArgumentTypes {}
 public protocol SimpleEntryFunctionArgumentTypes: AnyFunctionArgumentTypes {}

@@ -2,8 +2,8 @@
 import Foundation
 import Clients
 import OpenAPIRuntime
-import Types
 import APIs
+import Utils
 extension Aptos {
     public struct Account: Sendable, AccountAPIProtocol {
         let config: AptosConfig

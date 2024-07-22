@@ -115,11 +115,11 @@ extension Account {
         return try fromDerivationPath(args as GenerateAccountProtocol & PrivateKeyFromDerivationPathProtocol)  
     }
 
-    public static func fromDerivationPath(mnemonic: String, path: String) throws -> Ed25519Account {
+    public static func fromDerivationPath(_ path: String, mnemonic: String) throws -> Ed25519Account {
         return try fromDerivationPath(.init(scheme: .ed25519, legacy: true, path: path, mnemonic: mnemonic)) as! Ed25519Account
     }
 
-    public static func fromDerivationPath(scheme: SigningSchemeInput = .ed25519, mnemonic: String, path: String) throws -> SingleKeyAccount {
+    public static func fromDerivationPath(_ path: String, mnemonic: String, scheme: SigningSchemeInput = .ed25519) throws -> SingleKeyAccount {
         return try fromDerivationPath(.init(scheme: scheme, legacy: false, path: path, mnemonic: mnemonic)) as! SingleKeyAccount
     }
 }

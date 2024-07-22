@@ -7,6 +7,7 @@ import Types
 import Core
 import BCS
 import Transactions
+import Utils
 
 final class TransactionTest: XCTestCase {
     // the aptos env default is devnet & fullnode

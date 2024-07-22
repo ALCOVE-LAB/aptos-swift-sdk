@@ -5,6 +5,7 @@ import HTTPTypes
 import Types
 import Core
 import APIs
+import Utils
 
 public struct Faucet: Sendable, FaucetAPIProtocol {
     let config: AptosConfig

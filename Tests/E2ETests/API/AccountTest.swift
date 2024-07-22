@@ -9,6 +9,7 @@ import Types
 import Core
 import BCS
 import Transactions
+import Utils
 
 struct Ed25519 {
     static let privateKey = "0xc5338cd251c22daa8c9c9cc94f498cc8a5c7e1d2e75287a5dda91096fe64efa5"

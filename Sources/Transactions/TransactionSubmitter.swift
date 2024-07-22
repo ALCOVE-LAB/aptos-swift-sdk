@@ -2,7 +2,7 @@ import Foundation
 import Types
 import Clients
 import Core
-
+import Utils
 public protocol TransactionSubmitter: TransactionBuilder {
     var client: any ClientInterface { get }
     var aptosConfig: AptosConfig { get }

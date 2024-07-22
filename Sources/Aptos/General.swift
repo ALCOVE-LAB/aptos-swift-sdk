@@ -3,9 +3,9 @@
 import Foundation
 import Clients
 import OpenAPIRuntime
-import Types
 import APIs
 import Transactions
+import Utils
 
 extension Aptos {
     public struct General: Sendable, GerneralAPIProtocol, TransactionBuilder {

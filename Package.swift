@@ -11,7 +11,7 @@ let package = Package(
         .visionOS(.v1)
     ],
     products: [
-        .library(name: "Aptos", targets: ["Aptos"]),
+        .library(name: "Aptos", targets: ["Aptos", "Core", "BCS", "APIs", "Transactions", "Utils", "Types"]),
         .library(name: "BIP32", targets: ["BIP32"]),
     ],
     dependencies: [
@@ -102,7 +102,10 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Utils"
+            name: "Utils",
+            dependencies: [
+                "Clients"
+            ]
         ),
         // MARK: - TestTargets
         .testTarget(
@@ -128,6 +131,7 @@ let package = Package(
                 "Transactions",
                 "APIs",
                 "Core",
+                "Utils"
             ]
         )
     ],

@@ -24,14 +24,14 @@ public struct Aptos: Sendable {
 
 struct ClientConfigMiddleware: ClientMiddleware {
     
-    let network: Network
+    let network: AptosConfig.Network
     let clientConfig: ClientConfig?
     let fullnodeConfig: ClientHeadersType?
     let indexerConfig: ClientHeadersType?
     let faucetConfig: FaucetConfig?
     
     init(
-        network: Network,
+        network: AptosConfig.Network,
         clientConfig: ClientConfig?,
         fullnodeConfig: ClientHeadersType?,
         indexerConfig: ClientHeadersType?,

@@ -1,31 +1,94 @@
 # Aptos Swift SDK
 
-# TODO List
+## Installing the Swift SDk
 
-## Milestone 1
-Complete the main program architecture, and complete the basic capabilities including reading accounts and transactions, basic unit tests, and demo examples.
-- [x] BCS, serialize & deserialize basic data protocol
-- [x] Clients & RESTful APIs
-- [x] Account & Transaction, support read Account info and Transaction
-- [x] Basic Unit Test
-- [x] Demo, the fully demo by usage
+```swift
+.package(url: "https://github.com/ALCOVE-LAB/aptos-swift-sdk.git", branch: "main")
+```
 
-## Milestone 2
-Complete the create Account feature and Faucet client supported.
+## Using the Swift SDk
 
-- [x] Support Account Create
-- [x] Faucet Client for Testnet & Devnet
+### Creating a client
+You can create a client by importing the aptos-swift-sdk, and createing a `Client`
 
+```swift
+import Aptos
 
-## Milestone 3
-Complete the Writing to Chain capabilities, include crypto keys and transaction submission.
+let client = Aptos(aptosConfig: .devnet)
 
-- [x] Private Keys
-- [ ] Passkey & Keyless Support
-- [x] Transaction submission
-- [x] View functions
+```
+You can configure the network with the AptosConfig.Network, or use a preexisting AptosConfig.devnet, aptos.testnet, or aptos.mainnet
 
-## More Features
-- GraphQL Indexer API 
-- Processors & Transaction Stream Service
-- More capabilities with the version updated
+### Creating a private key
+You can create a new Ed25519 account’s private key by calling Account.generate().
+
+```swift
+let account = Account.generate()
+```
+
+Derive from private key
+```swift
+
+let privateKey = try Ed25519PrivateKey("myEd25519privatekeystring")
+// or
+let singleKeyPrivateKey = try Secp256k1PrivateKey(Secp256k1.privateKey)
+
+let newAccount: Account.Ed25519Account = try Account.fromPrivateKey(privateKey)
+let singleKeyAccount: Account.SingleKeyAccount = try Account.fromPrivateKey(singleKeyPrivateKey)
+```
+
+Derive from path
+```swift
+let path = "m/44'/637'/0'/0'/1"
+let mnemonic = "various float stumble..."
+let newAccount = try Account.fromDerivationPath(Wallet.path, mnemonic: Wallet.mnemonic)
+```
+
+### Funding accounts
+You can create and fund an account with a faucet on any network that is not mainnet
+```swift
+let account = Account.generate()
+let txn = try await client.faucet.fundAccount(accountAddress: account.accountAddress, amount: 100_000_000)
+```
+
+### Sending a transaction
+You can send a AptosCoin via a transaction
+
+```swift
+let txn: TransactionResponse
+let senderAccount = Account.generate()
+_ = try await aptos.faucet.fundAccount(accountAddress: senderAccount.accountAddress, amount: 100_000_000)
+let bob = Account.generate()
+// Build transaction
+let rawTxn = try await aptos.transaction.build.simple(
+    sender: senderAccount.accountAddress,
+    data: InputEntryFunctionData(
+        function: "0x1::aptos_account::transfer",
+        functionArguments: [bob.accountAddress, 100]
+    )
+)
+// Sign 
+let authenticator = try await aptos.transaction.sign.transaction(
+    signer: senderAccount,
+    transaction: rawTxn
+)
+// Submit 
+let response = try await aptos.transaction.submit.simple(
+    transaction: rawTxn,
+    senderAuthenticator: authenticator
+)
+// Wait
+txn = try await aptos.transaction.waitForTransaction(transactionHash: response.hash)
+// Read
+let transaction = try await aptos.transaction.getTransactionByHash(txn.hash)
+
+```
+
+### Testing
+To run the SDK tests, simply run from the root of this repository:
+
+> Note: for a better experience, make sure there is no aptos local node process up and running (can check if there is a ?process running on port 8080).
+
+```swift
+swift test
+```
