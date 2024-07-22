@@ -313,6 +313,8 @@ public enum TransactionResponse: Codable, Equatable, Sendable {
     case userTransaction(UserTransaction)
     
     case validatorTransaction(ValidatorTransaction)
+
+    case blockEpilogueTransaction(BlockEpilogueTransaction)
     
     public var success: Bool {
         switch self {
@@ -328,7 +330,8 @@ public enum TransactionResponse: Codable, Equatable, Sendable {
             value.success
         case .validatorTransaction(let value):
             value.success
-            
+        case .blockEpilogueTransaction(let value):
+            value.success
         }
     }
     
@@ -347,7 +350,8 @@ public enum TransactionResponse: Codable, Equatable, Sendable {
             value.vmStatus
         case .validatorTransaction(let value):
             value.vmStatus
-            
+        case .blockEpilogueTransaction(let value):
+            value.vmStatus
         }
     }
 
@@ -365,6 +369,8 @@ public enum TransactionResponse: Codable, Equatable, Sendable {
             value.version
         case .validatorTransaction(let value):
             value.version
+        case .blockEpilogueTransaction(let value):
+            value.version
         }
     }
 
@@ -381,6 +387,8 @@ public enum TransactionResponse: Codable, Equatable, Sendable {
         case .userTransaction(let value):
             value.hash
         case .validatorTransaction(let value):
+            value.hash
+        case .blockEpilogueTransaction(let value):
             value.hash
         }
     }
@@ -411,6 +419,8 @@ public enum TransactionResponse: Codable, Equatable, Sendable {
             self = .userTransaction(try .init(from: decoder))
         case "validator_transaction":
             self = .validatorTransaction(try .init(from: decoder))
+        case "block_epilogue_transaction":
+            self = .blockEpilogueTransaction(try .init(from: decoder))
         default:
             throw DecodingError.unknownOneOfDiscriminator(
                 discriminatorKey: CodingKeys._type,
@@ -433,6 +443,8 @@ public enum TransactionResponse: Codable, Equatable, Sendable {
             try value.encode(to: encoder)
         case .validatorTransaction(let value):
             try value.encode(to: encoder)
+        case .blockEpilogueTransaction(let value):
+            try value.encode(to: encoder)
         }
     }
 
@@ -449,6 +461,8 @@ public enum TransactionResponse: Codable, Equatable, Sendable {
         case (.userTransaction(let lhsValue), .userTransaction(let rhsValue)):
             return lhsValue == rhsValue
         case (.validatorTransaction(let lhsValue), .validatorTransaction(let rhsValue)):
+            return lhsValue == rhsValue
+        case (.blockEpilogueTransaction(let lhsValue), .blockEpilogueTransaction(let rhsValue)):
             return lhsValue == rhsValue
         default:
             return false
@@ -700,7 +714,7 @@ public struct ValidatorTransaction: Codable, Hashable, Sendable {
     public var changes: [WriteSetChange]
     public var events: [Event]
     public var timestamp: String
-    
+
     public enum CodingKeys: String, CodingKey {
         case version
         case hash
@@ -713,6 +727,40 @@ public struct ValidatorTransaction: Codable, Hashable, Sendable {
         case accumulatorRootHash = "accumulator_root_hash"
         case changes
         case events
+        case timestamp
+    }
+}
+
+public struct BlockEpilogueTransaction: Codable, Hashable, Sendable {
+    public var version: String
+    public var hash: String
+    public var stateChangeHash: String
+    public var eventRootHash: String
+    public var stateCheckpointHash: String?
+    public var gasUsed: String
+    /// Whether the transaction was successful
+    public var success: Bool
+    /// The VM status of the transaction, can tell useful information in a failure
+    public var vmStatus: String
+    public var accumulatorRootHash: String
+    /// Final state of resources changed by the transaction
+    public var changes: [WriteSetChange]
+    public var timestamp: String
+
+    // TODO: block_end_info
+    // https://aptos.dev/en/build/apis/fullnode-rest-api-reference#model/blockepiloguetransaction
+    
+    public enum CodingKeys: String, CodingKey {
+        case version
+        case hash
+        case stateChangeHash = "state_change_hash"
+        case eventRootHash = "event_root_hash"
+        case stateCheckpointHash = "state_checkpoint_hash"
+        case gasUsed = "gas_used"
+        case success
+        case vmStatus = "vm_status"
+        case accumulatorRootHash = "accumulator_root_hash"
+        case changes
         case timestamp
     }
 }
