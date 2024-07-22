@@ -11,7 +11,6 @@ on:
 
 jobs:
   build:
-
     runs-on: macos-latest
 
     steps:
@@ -21,6 +20,10 @@ jobs:
     - name: Run localnet
       run: |
         brew install aptos 
-        aptos node run-local-testnet --force-restart --assume-yes
+        aptos node run-local-testnet --force-restart --assume-yes &
+        echo "Waiting for localnet to be ready..."
+        while ! curl --output /dev/null --silent --head --fail http://127.0.0.1:8080; do
+          sleep 5
+        done
     - name: Run tests
       run: swift test -v
