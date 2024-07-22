@@ -1,4 +1,4 @@
-# Swift SDK for Aptos
+# Aptos Swift SDK
 
 # TODO List
 
@@ -21,7 +21,7 @@ Complete the create Account feature and Faucet client supported.
 Complete the Writing to Chain capabilities, include crypto keys and transaction submission.
 
 - [x] Private Keys
-- [x] Passkey & Keyless Support
+- [ ] Passkey & Keyless Support
 - [x] Transaction submission
 - [x] View functions
 
