@@ -17,7 +17,7 @@ import Aptos
 let client = Aptos(aptosConfig: .devnet)
 
 ```
-You can configure the network with the AptosConfig.Network, or use a preexisting AptosConfig.devnet, aptos.testnet, or aptos.mainnet
+You can configure the network with the AptosConfig.Network, or use a preexisting AptosConfig.devnet, AptosConfig.testnet, or AptosConfig.mainnet
 
 ### Creating a private key
 You can create a new Ed25519 account’s private key by calling Account.generate().
