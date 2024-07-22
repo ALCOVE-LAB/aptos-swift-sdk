@@ -3,6 +3,7 @@
 import Foundation
 import BCS
 import Types
+import Core
 
 public enum TransactionPayloadError: Error {
     case invalidVariantIndex

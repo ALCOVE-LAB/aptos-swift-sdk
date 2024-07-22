@@ -204,30 +204,3 @@ extension TransactionAuthenticator {
     }
   }
 }
-
-/*
-
-export abstract class TransactionAuthenticator extends Serializable {
-  abstract serialize(serializer: Serializer): void;
-
-  static deserialize(deserializer: Deserializer): TransactionAuthenticator {
-    const index = deserializer.deserializeUleb128AsU32();
-    switch (index) {
-      case TransactionAuthenticatorVariant.Ed25519:
-        return TransactionAuthenticatorEd25519.load(deserializer);
-      case TransactionAuthenticatorVariant.MultiEd25519:
-        return TransactionAuthenticatorMultiEd25519.load(deserializer);
-      case TransactionAuthenticatorVariant.MultiAgent:
-        return TransactionAuthenticatorMultiAgent.load(deserializer);
-      case TransactionAuthenticatorVariant.FeePayer:
-        return TransactionAuthenticatorFeePayer.load(deserializer);
-      case TransactionAuthenticatorVariant.SingleSender:
-        return TransactionAuthenticatorSingleSender.load(deserializer);
-      default:
-        throw new Error(`Unknown variant index for TransactionAuthenticator: ${index}`);
-    }
-  }
-}
-
-
-*/

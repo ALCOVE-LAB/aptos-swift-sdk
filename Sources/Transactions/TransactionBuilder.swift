@@ -7,6 +7,7 @@ import Utils
 import BCS
 import BigInt
 import CryptoSwift
+import APIs
 
 public enum TransactionBuilderdError: Error {
     case invalidFunctionId
@@ -24,6 +25,7 @@ public enum TransactionBuilderdError: Error {
 }
 
 public typealias FunctionParts = (moduleAddress: String, moduleName: String, functionName: String)
+
 extension MoveFunctionId {
     func getFunctionParts() throws -> FunctionParts {
         let funcNameParts = self.split(separator: ":")
@@ -41,12 +43,12 @@ extension MoveFunction {
        return index
     }
 }
-protocol TransactionBuilder: GerneralAPIProtocol, AccountAPIProtocol, TransactionAPIProtocol {
+public protocol TransactionBuilder: GerneralAPIProtocol, AccountAPIProtocol, TransactionAPIProtocol {
     var client: any ClientInterface { get }
     var aptosConfig: AptosConfig { get }
 }
 
-extension TransactionBuilder {
+public extension TransactionBuilder {
     func generateTransaction(
         args: InputGenerateSingleSignerRawTransactionData
     ) async throws -> SimpleTransaction {
@@ -633,5 +635,24 @@ extension TransactionBuilder {
                 secondarySignerAddresses: secondarySignerAddresses)
         }
         return transaction.rawTransaction
+    }
+}
+
+
+extension GerneralAPIProtocol where Self: TransactionBuilder {
+    public func view(payload: InputViewFunctionData, options: LedgerVersionArg? = nil) async throws -> Array<MoveValue>  {
+        let viewFunctionPayload = try await generateViewFunctionPayload(payload.remoteABI(with : self.aptosConfig))
+        
+        let serializer = BcsSerializer()
+        try viewFunctionPayload.serialize(serializer: serializer)
+        let bytes = serializer.toUInt8Array()
+
+        var query = [String: AnyNumber]()
+        if let version = options?.ledgerVersion {
+            query["ledger_version"] = version
+        }
+
+        let container: OpenAPIRuntime.OpenAPIArrayContainer = try await client.post(path: "/view", query: query, bobdy: .binary(.init(bytes)), contentType: MimeType.bcsViewFunction).body
+        return container.value.map({ $0 as? MoveValue }).compactMap({ $0 })
     }
 }

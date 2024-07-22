@@ -3,13 +3,12 @@ import Types
 import Clients
 import Core
 
-
-protocol TransactionSubmitter: TransactionBuilder {
+public protocol TransactionSubmitter: TransactionBuilder {
     var client: any ClientInterface { get }
     var aptosConfig: AptosConfig { get }
 }
 
-extension TransactionSubmitter {
+public extension TransactionSubmitter {
     func signTransaction(signer: AccountProtocol, transaction: AnyRawTransaction) async throws -> AccountAuthenticator {
         let accountAuthenticator = try await sign(signer: signer, transaction: transaction)
         return accountAuthenticator

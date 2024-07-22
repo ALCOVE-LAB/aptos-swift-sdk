@@ -2,6 +2,7 @@ import Foundation
 import Clients
 import Types
 import Core
+import Transactions
 
 extension Transaction {
     public struct Build: Sendable {

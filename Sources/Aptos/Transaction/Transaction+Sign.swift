@@ -3,6 +3,7 @@ import Foundation
 import Types
 import Clients
 import Core
+import Transactions
 
 extension Transaction {
     public struct Sign: Sendable {

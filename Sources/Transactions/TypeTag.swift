@@ -1,7 +1,7 @@
 import Foundation
 import BCS
 import Types
-
+import Core
 
 public enum TypeTagError: Error {
     case invalidVariantIndex

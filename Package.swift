@@ -38,7 +38,16 @@ let package = Package(
                 "Utils",
                 "Types",
                 "Core",
-                "BCS"
+                "BCS",
+                "APIs"
+            ]
+        ),
+        .target(
+            name: "APIs",
+            dependencies: [
+                "Types",
+                "Core",
+                "Clients"
             ]
         ),
         .target(
@@ -75,6 +84,16 @@ let package = Package(
             ]
         ),
         .target(
+            name: "Transactions",
+            dependencies: [
+                "Core",
+                "BCS",
+                "Types",
+                "Clients",
+                "APIs"
+            ]
+        ),
+        .target(
             name: "BIP32",
             dependencies: [
                 .product(name: "Crypto", package: "swift-crypto"),
@@ -83,13 +102,6 @@ let package = Package(
         ),
         .target(
             name: "Utils"
-        ),
-        // MARK: - Examples
-        .executableTarget(
-            name: "ClientTest",
-            dependencies: [
-                "Clients",
-            ]
         ),
         // MARK: - TestTargets
         .testTarget(
@@ -111,7 +123,10 @@ let package = Package(
             dependencies: [
                 "Aptos",
                 "Types",
-                "Clients"
+                "Clients",
+                "Transactions",
+                "APIs",
+                "Core",
             ]
         )
     ],

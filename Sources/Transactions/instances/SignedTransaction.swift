@@ -1,5 +1,6 @@
 import Foundation
 import BCS
+import Core
 
 public struct SignedTransaction: Serializable, Deserializable {
     public let rawTransaction: RawTransaction

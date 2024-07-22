@@ -1,8 +1,8 @@
 import Foundation
-import Clients
-import OpenAPIRuntime
 import HTTPTypes
 import Types
+import Clients
+
 extension ClientInterface {
     public func sendRequest<Body>(_ request: any _RequestOptions) async throws -> AptosResponse<Body> where Body: Decodable {
         return try await send(input: request) { input in
@@ -36,7 +36,7 @@ extension ClientInterface {
         }
     }
     
-    func sendPaginateRequest<Body>(
+    public func sendPaginateRequest<Body>(
         _ request: inout RequestOptions & PagenationRequest
     ) async throws  -> AptosResponse<[Body]> where Body: Decodable {
         var cursor: String?
@@ -54,19 +54,19 @@ extension ClientInterface {
         return .init(requestOptions: request, body: result)
     }
     
-    func get<Body>(
+    public func get<Body>(
         _ request: any RequestOptions
     ) async throws -> AptosResponse<Body> where Body: Decodable {
         return try await sendRequest(request)
     }
     
-    func post<Body>(
+    public func post<Body>(
         _ request: any PostRequestOptions
     ) async throws -> AptosResponse<Body> where Body: Decodable {
         return try await sendRequest(request)
     }
 
-    func get<Body>(
+    public func get<Body>(
         path: String,
         query: Parameter? = nil,
         headers: HTTPFields? = nil,
@@ -84,7 +84,7 @@ extension ClientInterface {
         )
     }
 
-     func post<Body>(
+    public func post<Body>(
         path: String,
         query: Parameter? = nil,
         bobdy: RequestBody? = nil,

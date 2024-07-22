@@ -4,6 +4,7 @@ import OpenAPIRuntime
 import HTTPTypes
 import Types
 import Core
+import APIs
 
 public struct Faucet: Sendable, FaucetAPIProtocol {
     let config: AptosConfig

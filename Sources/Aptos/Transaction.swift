@@ -2,7 +2,7 @@ import Foundation
 import Types
 import Clients
 import OpenAPIRuntime
-
+import APIs
 
 public struct Transaction: TransactionAPIProtocol, Sendable {
     let config: AptosConfig

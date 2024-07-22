@@ -2,6 +2,7 @@ import Foundation
 import BCS
 import Types
 import BigInt
+import Core
 
 public struct RawTransaction: Serializable, Deserializable {
     public let sender: AccountAddress

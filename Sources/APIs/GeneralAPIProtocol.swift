@@ -1,9 +1,6 @@
 import Foundation
 import Types
 import Clients
-import Core
-import BCS
-import OpenAPIRuntime
 
 public protocol GerneralAPIProtocol {
     var client: any ClientInterface { get }
@@ -38,23 +35,5 @@ extension GerneralAPIProtocol {
             query["ledger_version"] = version
         }
         return try await client.post(path: "tables/\(handle)/item", query: query, bobdy: .json(data.json)).body
-    }
-}
-
-extension GerneralAPIProtocol where Self: TransactionBuilder {
-    func view(payload: InputViewFunctionData, options: LedgerVersionArg? = nil) async throws -> Array<MoveValue>  {
-        let viewFunctionPayload = try await generateViewFunctionPayload(payload.remoteABI(with : self.aptosConfig))
-        
-        let serializer = BcsSerializer()
-        try viewFunctionPayload.serialize(serializer: serializer)
-        let bytes = serializer.toUInt8Array()
-
-        var query = [String: AnyNumber]()
-        if let version = options?.ledgerVersion {
-            query["ledger_version"] = version
-        }
-
-        let container: OpenAPIRuntime.OpenAPIArrayContainer = try await client.post(path: "/view", query: query, bobdy: .binary(.init(bytes)), contentType: MimeType.bcsViewFunction).body
-        return container.value.map({ $0 as? MoveValue }).compactMap({ $0 })
     }
 }

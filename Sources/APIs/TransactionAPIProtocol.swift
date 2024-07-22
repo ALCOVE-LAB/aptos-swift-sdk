@@ -1,13 +1,17 @@
 
 import Foundation
-import Clients
 import Types
-import HTTPTypes
 import Core
-import Utils
+import Clients
+
 public struct WaitForTransactionError: Error {
     public var message: String
     public var lastTxn: TransactionResponse?
+
+    public init(message: String, lastTxn: TransactionResponse?) {
+        self.message = message
+        self.lastTxn = lastTxn
+    }
 }
 public struct FailedTransactionError: Error {
     public var message: String

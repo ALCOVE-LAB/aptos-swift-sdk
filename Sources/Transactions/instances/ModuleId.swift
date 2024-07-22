@@ -1,6 +1,7 @@
 
 import Foundation
 import BCS
+import Core
 
 public enum ModuleIdError: Error {
     case invalidFormat

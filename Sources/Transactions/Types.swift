@@ -3,6 +3,7 @@ import Foundation
 import BigInt
 import BCS
 import Types
+import Core
 
 public protocol AnyFunctionArgumentTypes {}
 public protocol SimpleEntryFunctionArgumentTypes: AnyFunctionArgumentTypes {}

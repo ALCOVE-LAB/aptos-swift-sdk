@@ -4,10 +4,12 @@ import Foundation
 import Clients
 import OpenAPIRuntime
 import Types
+import APIs
+import Transactions
 
 extension Aptos {
     public struct General: Sendable, GerneralAPIProtocol, TransactionBuilder {
-        let aptosConfig: AptosConfig
+        public let aptosConfig: AptosConfig
         public let client: any ClientInterface
         
         init(config: AptosConfig) {
