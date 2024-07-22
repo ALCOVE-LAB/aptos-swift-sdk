@@ -39,7 +39,8 @@ let package = Package(
                 "Types",
                 "Core",
                 "BCS",
-                "APIs"
+                "APIs",
+                "Transactions"
             ]
         ),
         .target(
