@@ -19,4 +19,7 @@ jobs:
     - name: Build
       run: swift build -v
     - name: Run tests
-      run: swift test -v
+      run: |
+        brew install aptos 
+        aptos node run-local-testnet --force-restart --assume-yes
+        swift test -v
