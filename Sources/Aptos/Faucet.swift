@@ -10,7 +10,7 @@ import Utils
 public struct Faucet: Sendable, FaucetAPIProtocol {
     let config: AptosConfig
     public let client: any ClientInterface
-    let transaction: TransactionAPIProtocol
+    private let transaction: TransactionAPIProtocol
 
     init(config: AptosConfig, transaction: TransactionAPIProtocol) {
         self.config = config

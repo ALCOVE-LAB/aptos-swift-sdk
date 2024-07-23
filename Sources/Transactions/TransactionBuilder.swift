@@ -48,7 +48,7 @@ public protocol TransactionBuilder: GerneralAPIProtocol, AccountAPIProtocol, Tra
     var aptosConfig: AptosConfig { get }
 }
 
-public extension TransactionBuilder {
+package extension TransactionBuilder {
     func generateTransaction(
         args: InputGenerateSingleSignerRawTransactionData
     ) async throws -> SimpleTransaction {
