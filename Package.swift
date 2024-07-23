@@ -11,7 +11,7 @@ let package = Package(
         .visionOS(.v1)
     ],
     products: [
-        .library(name: "Aptos", targets: ["Aptos", "Core", "BCS", "APIs", "Transactions", "Utils", "Types"]),
+        .library(name: "Aptos", targets: ["Aptos", "APIs", "Core", "BCS", "Transactions", "Utils", "Types"]),
         .library(name: "BIP32", targets: ["BIP32"]),
     ],
     dependencies: [

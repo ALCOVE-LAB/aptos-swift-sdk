@@ -2,7 +2,6 @@
 import Foundation
 import BCS
 import BigInt
-import Utils
 import Clients
 import OpenAPIURLSession
 
