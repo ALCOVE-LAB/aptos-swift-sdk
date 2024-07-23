@@ -2,7 +2,7 @@ import Foundation
 
 extension AptosConfig {
 
-    public enum AptosApiEnv: Sendable {
+    public enum ApiEnv: Sendable {
         case mainnet
         case testnet
         case devnet
@@ -62,7 +62,7 @@ extension AptosConfig {
         }
     }
 
-    public enum AptosApiType: Sendable {
+    public enum ApiType: Sendable {
         case fullNode
         case indexer
         case faucet
@@ -76,20 +76,17 @@ extension AptosConfig {
         public static let devnet = Network(apiEnv: .devnet)
         public static let localnet = Network(apiEnv: .local)
 
-        public let apiEnv: AptosApiEnv
-        public let apiType: AptosApiType
+        public let apiEnv: ApiEnv
         
         public static func custom(
-            apiEnv: AptosApiEnv,
-            apiType: AptosApiType = .fullNode
+            apiEnv: ApiEnv
         ) -> Network {
-            let config = self.init(apiEnv: apiEnv, apiType: apiType)
+            let config = self.init(apiEnv: apiEnv)
             return config
         }
         
-        public init(apiEnv: AptosApiEnv = .devnet, apiType: AptosApiType = .fullNode) {
+        public init(apiEnv: ApiEnv = .devnet) {
             self.apiEnv = apiEnv
-            self.apiType = apiType
         }
         
         public var name: String {
@@ -108,19 +105,18 @@ extension AptosConfig {
                 "custom"
             }
         }
-        
-        public var api: String {
-            switch apiType {
-            case .fullNode:
-                return apiEnv.nodeApi
-            case .indexer:
-                return apiEnv.indexerApi
-            case .faucet:
-                return apiEnv.faucetApi
-            }
+
+        public var fullNodeApi: String {
+            apiEnv.nodeApi
+        }
+        public var indexerApi: String {
+            apiEnv.indexerApi
+        }
+        public var faucetApi: String {
+            apiEnv.faucetApi
         }
         
-        public func apiType(with url: URL) -> AptosApiType? {
+        public func apiType(with url: URL) -> ApiType? {
             if case .custom = apiEnv {
                 return nil
             }
@@ -134,18 +130,6 @@ extension AptosConfig {
                 return .faucet
             }
             return nil
-        }
-
-
-        public func api(with apiType: AptosApiType) -> URL {
-            switch apiType {
-            case .fullNode:
-                return URL(string: apiEnv.nodeApi)!
-            case .indexer:
-                return URL(string: apiEnv.indexerApi)!
-            case .faucet:
-                return URL(string: apiEnv.faucetApi)!
-            }
         }
         
         public var chainId: UInt8? {

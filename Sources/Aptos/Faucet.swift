@@ -24,7 +24,9 @@ public struct Faucet: Sendable, FaucetAPIProtocol {
             faucetConfig: config.faucetConfig
         )
         
-        let serverURL = config.network.api(with: .faucet)
+        guard let serverURL =  URL(string: config.network.faucetApi) else {
+            fatalError("Failed to create an URL with the string '\(config.network.faucetApi)'.")
+        }
         
         self.client = Client(
             serverURL: serverURL,

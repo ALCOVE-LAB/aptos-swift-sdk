@@ -23,8 +23,8 @@ extension Aptos {
                 faucetConfig: config.faucetConfig
             )
             
-            guard let serverURL = URL(string: config.network.api) else {
-                fatalError("Failed to create an URL with the string '\(config.network.api)'.")
+            guard let serverURL = URL(string: config.network.fullNodeApi) else {
+                fatalError("Failed to create an URL with the string '\(config.network.fullNodeApi)'.")
             }
             
             self.client = Client(
