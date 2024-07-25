@@ -158,10 +158,9 @@ extension InputMultiSigDataWithABI: InputGenerateTransactionPayloadDataWithABI {
 
 public typealias FunctionArgumentTypes = AnyFunctionArgumentTypes
 
-public enum TypeArgument {
-    case typeTag(TypeTag)
-    case string(String)
-}
+public protocol TypeArgument {}
+extension TypeTag: TypeArgument {}
+extension String: TypeArgument {}
 
 public struct InputEntryFunctionData {
     public var function: MoveFunctionId

@@ -1,7 +1,6 @@
 import Foundation
 import Types
 import Clients
-
 public protocol GerneralAPIProtocol {
     var client: any ClientInterface { get }
 
@@ -9,7 +8,7 @@ public protocol GerneralAPIProtocol {
     func getChainId() async throws -> UInt8
     func getBlockByVersion(_ ledgerVersion: UInt64) async throws -> Block
     func getBlockByHeight(_ blockHeight: UInt64, withTransactions: Bool) async throws -> Block
-    func getTableItem<T>(handle: String, data: TableItemRequest, withLedgerVersion : LedgerVersionArg) async throws -> T where T: Decodable
+    func getTableItem(handle: String, data: TableItemRequest, withLedgerVersion: LedgerVersionArg?) async throws -> Data
 }
 
 extension GerneralAPIProtocol {
@@ -22,18 +21,28 @@ extension GerneralAPIProtocol {
     }
 
     public func getBlockByVersion(_ ledgerVersion: UInt64) async throws -> Block {
-        return try await client.get(path: "blocks/by_version/\(ledgerVersion)").body
+        return try await client.get(path: "/blocks/by_version/\(ledgerVersion)").body
     }
 
     public func getBlockByHeight(_ blockHeight: UInt64, withTransactions: Bool = false) async throws -> Block {
-        return try await client.get(path: "blocks/by_height/\(blockHeight)", query: ["with_transactions": withTransactions]).body
+        return try await client.get(path: "/blocks/by_height/\(blockHeight)", query: ["with_transactions": withTransactions]).body
     }
-
-    public func getTableItem<T>(handle: String, data: TableItemRequest, withLedgerVersion : LedgerVersionArg) async throws -> T where T: Decodable {
+    
+    public func getTableItem(handle: String, data: TableItemRequest, withLedgerVersion: LedgerVersionArg? = nil) async throws -> Data {
         var query = [String: AnyNumber]()
-        if let version = withLedgerVersion.ledgerVersion {
+        if let version = withLedgerVersion?.ledgerVersion {
             query["ledger_version"] = version
         }
-        return try await client.post(path: "tables/\(handle)/item", query: query, bobdy: .json(data.json)).body
+        
+        let postRequest = ClientPostRequest(path: "/tables/\(handle)/item", query: query, body: .json(data.json))
+        return try await client.send(input: postRequest, serializer: { (input) in 
+            return try input.serializer(with: client.converter)
+        }, deserializer: { (resp, httpBody) in
+            if resp.status.kind == .successful {
+                return try await Data(collecting: httpBody ?? [], upTo: .max)
+            } else {
+                throw try await client.convertBodyToAptosError(httpBody, resp: resp, request: postRequest)
+            }
+        })
     }
 }

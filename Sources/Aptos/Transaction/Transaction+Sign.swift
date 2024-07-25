@@ -7,15 +7,22 @@ import Transactions
 
 extension Transaction {
     public struct Sign: Sendable {
-        public let aptosConfig: AptosConfig
-        public let client: any ClientInterface
+        private let submitter: TransactionSubmitter
+        init(aptosConfig: AptosConfig, client: any ClientInterface) {
+            self.submitter = Submitter(aptosConfig: aptosConfig, client: client)
+        }
     }
 }
 
-extension Transaction.Sign: TransactionSubmitter {
+private struct Submitter: TransactionSubmitter {
+    let aptosConfig: AptosConfig
+    let client: any ClientInterface
+}
+
+extension Transaction.Sign {
 
     public func transaction(signer: AccountProtocol, transaction: AnyRawTransaction) async throws -> AccountAuthenticator {
-        return try await signTransaction(signer: signer, transaction: transaction)
+        return try await submitter.signTransaction(signer: signer, transaction: transaction)
     }
 
     public func transactionAsFeePayer(signer: AccountProtocol, transaction: inout AnyRawTransaction) async throws -> AccountAuthenticator {
@@ -25,7 +32,7 @@ extension Transaction.Sign: TransactionSubmitter {
         
         transaction.feePayerAddress = signer.accountAddress
 
-        return try await signTransaction(signer: signer, transaction: transaction)
+        return try await submitter.signTransaction(signer: signer, transaction: transaction)
     }
 }
 

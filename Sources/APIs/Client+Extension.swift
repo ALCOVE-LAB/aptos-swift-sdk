@@ -2,8 +2,23 @@ import Foundation
 import HTTPTypes
 import Types
 import Clients
-
+import OpenAPIRuntime
 extension ClientInterface {
+
+    public func convertBodyToAptosError(_ httpBody: HTTPBody?, resp: HTTPResponse, request: any _RequestOptions) async throws -> AptosApiError {
+        let apiError = try await converter.getResponseBodyAsJSON(
+                    AptosApiError.Body.self,
+                    from: httpBody) { body in
+                    return AptosApiError(
+                        body: body,
+                        requestOptions: request,
+                        response: resp,
+                        responseBody: httpBody
+                    )
+                }
+        return apiError
+    }
+
     public func sendRequest<Body>(_ request: any _RequestOptions) async throws -> AptosResponse<Body> where Body: Decodable {
         return try await send(input: request) { input in
             return try input.serializer(with: converter)
@@ -21,17 +36,7 @@ extension ClientInterface {
                     )
                 }
             } else {
-                let apiError = try await converter.getResponseBodyAsJSON(
-                    AptosApiError.Body.self,
-                    from: httpBody) { body in
-                    return AptosApiError(
-                        body: body,
-                        requestOptions: request,
-                        response: resp,
-                        responseBody: httpBody
-                    )
-                }
-                throw apiError
+                throw try await convertBodyToAptosError(httpBody, resp: resp, request: request)
             }
         }
     }
@@ -106,20 +111,20 @@ extension ClientInterface {
 
 }
 
-private struct ClientGetRequest: RequestOptions {
+struct ClientGetRequest: RequestOptions {
     var path: String
     var query: Parameter?
     var headers: HTTPFields?
-    var contentType: MimeType
-    var acceptType: MimeType
+    var contentType: MimeType = .json
+    var acceptType: MimeType = .json
 }
 
 
-private struct ClientPostRequest: PostRequestOptions {
+struct ClientPostRequest: PostRequestOptions {
     var path: String
     var query: Parameter?
     var body: RequestBody?
     var headers: HTTPFields?
-    var contentType: MimeType
-    var acceptType: MimeType
+    var contentType: MimeType = .json
+    var acceptType: MimeType = .json
 }

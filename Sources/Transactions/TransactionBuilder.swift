@@ -459,10 +459,12 @@ package extension TransactionBuilder {
     func standardizeTypeTags(_ typeArguments: [TypeArgument]?) throws -> [TypeTag] {
         return try typeArguments?.map({ (type) in 
             switch type { 
-                case .typeTag(let tag):
-                    return tag
-                case .string(let str):
-                    return try TypeTag.parseTypeTag(str)
+                case is TypeTag:
+                    return type as! TypeTag 
+                case is String:
+                    return try TypeTag.parseTypeTag(type as! String)
+                default:
+                    fatalError("invalid type argument")
             }
         }) ?? []
     }
@@ -635,24 +637,5 @@ package extension TransactionBuilder {
                 secondarySignerAddresses: secondarySignerAddresses)
         }
         return transaction.rawTransaction
-    }
-}
-
-
-extension GerneralAPIProtocol where Self: TransactionBuilder {
-    public func view(payload: InputViewFunctionData, options: LedgerVersionArg? = nil) async throws -> Array<MoveValue>  {
-        let viewFunctionPayload = try await generateViewFunctionPayload(payload.remoteABI(with : self.aptosConfig))
-        
-        let serializer = BcsSerializer()
-        try viewFunctionPayload.serialize(serializer: serializer)
-        let bytes = serializer.toUInt8Array()
-
-        var query = [String: AnyNumber]()
-        if let version = options?.ledgerVersion {
-            query["ledger_version"] = version
-        }
-
-        let container: OpenAPIRuntime.OpenAPIArrayContainer = try await client.post(path: "/view", query: query, bobdy: .binary(.init(bytes)), contentType: MimeType.bcsViewFunction).body
-        return container.value.map({ $0 as? MoveValue }).compactMap({ $0 })
     }
 }

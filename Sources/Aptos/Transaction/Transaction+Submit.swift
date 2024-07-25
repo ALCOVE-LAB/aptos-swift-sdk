@@ -9,12 +9,19 @@ import Types
 
 extension Transaction {
     public struct Submit: Sendable {
-        public let aptosConfig: AptosConfig
-        public let client: any ClientInterface
+        private let submitter: TransactionSubmitter
+        init(aptosConfig: AptosConfig, client: any ClientInterface) {
+            self.submitter = Submitter(aptosConfig: aptosConfig, client: client)
+        }
     }
 }
 
-extension Transaction.Submit: TransactionSubmitter {
+private struct Submitter: TransactionSubmitter {
+    let aptosConfig: AptosConfig
+    let client: any ClientInterface 
+}
+
+extension Transaction.Submit {
 
     public func simple(
         transaction: AnyRawTransaction,
@@ -22,7 +29,7 @@ extension Transaction.Submit: TransactionSubmitter {
         feePayerAuthenticator: AccountAuthenticator? = nil
     ) async throws -> PendingTransaction {
         // TODO: validate fee payer data on submission
-        return try await submitTransaction(
+        return try await submitter.submitTransaction(
             transaction: transaction,
             senderAuthenticator: senderAuthenticator,
             feePayerAuthenticator: feePayerAuthenticator
@@ -36,7 +43,7 @@ extension Transaction.Submit: TransactionSubmitter {
         feePayerAuthenticator: AccountAuthenticator? = nil
     ) async throws -> PendingTransaction {
         // TODO: validate fee payer data on submission
-        return try await submitTransaction(
+        return try await submitter.submitTransaction(
             transaction: transaction,
             senderAuthenticator: senderAuthenticator,
             feePayerAuthenticator: feePayerAuthenticator,

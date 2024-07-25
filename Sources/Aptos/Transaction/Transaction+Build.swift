@@ -6,16 +6,17 @@ import Transactions
 
 extension Transaction {
     public struct Build: Sendable {
-        public let aptosConfig: AptosConfig
-        public let client: any ClientInterface
+        private let builder: TransactionBuilder
         init(aptosConfig: AptosConfig, client: any ClientInterface) {
-            self.aptosConfig = aptosConfig
-            self.client = client
+            self.builder = Builder(aptosConfig: aptosConfig, client: client)
         }
-        
     }
 }
-extension Transaction.Build: TransactionBuilder {}
+
+private struct Builder: TransactionBuilder {
+    let aptosConfig: AptosConfig
+    let client: any ClientInterface
+}
 extension Transaction.Build {
 
     public func simple(
@@ -24,7 +25,7 @@ extension Transaction.Build {
         options: InputGenerateTransactionOptions? = nil,
         withFeePayer: Bool? = nil
     ) async throws -> SimpleTransaction {
-        return try await generateTransaction(args: .init(sender: sender, data: data, options: options, withFeePayer: withFeePayer))
+        return try await builder.generateTransaction(args: .init(sender: sender, data: data, options: options, withFeePayer: withFeePayer))
     }
 
     public func multiAgent(
@@ -34,7 +35,7 @@ extension Transaction.Build {
         options: InputGenerateTransactionOptions? = nil,
         withFeePayer: Bool? = nil
     ) async throws -> MultiAgentTransaction {
-        return try await generateTransactionPayload(
+        return try await builder.generateTransactionPayload(
             args: .init(
                 sender: sender,
                 data: data,

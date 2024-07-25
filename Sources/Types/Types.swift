@@ -112,7 +112,8 @@ public typealias MoveAddressType = String
 public typealias MoveObjectType = String
 public typealias MoveOptionType<T: MoveType> = Optional<T>
 
-public protocol MoveType: Codable,  Sendable {}
+public protocol MoveType:  Sendable {}
+extension Int: MoveType {}
 extension MoveUInt8Type: MoveType {}
 extension MoveUInt16Type: MoveType {}
 extension MoveUInt32Type: MoveType {}
@@ -122,9 +123,11 @@ extension MoveUInt128Type: MoveType {}
 // extension MoveUInt256Type: MoveType {}
 // extension MoveAddressType: MoveType {}
 // extension MoveObjectType: MoveType {}
-extension Array: MoveType where Element: MoveType {}
+extension Array: MoveType where Element == MoveType {}
+extension Dictionary: MoveType where Key == String, Value == MoveType {}
 
-public protocol MoveValue: Codable, Sendable {}
+public protocol MoveValue: Sendable {}
+extension Int: MoveValue {}
 extension Bool: MoveValue {}
 extension String: MoveValue {}
 extension MoveUInt8Type: MoveValue {}
@@ -138,9 +141,21 @@ extension MoveUInt64Type: MoveValue {}
 // extension MoveObjectType: MoveValue {}
 // extension MoveStructId: MoveValue {}
 extension MoveOptionType: MoveValue {}
-extension Array: MoveValue where Element: MoveValue {}
+extension Array: MoveValue where Element == MoveValue {}
+extension Dictionary: MoveValue where Key == String, Value == MoveValue {}
 
-
+public func convertToMoveValue(_ value: Any) -> MoveValue? {
+    switch value {
+        case let value as MoveValue:
+            return value
+        case let value as Dictionary<String, Any>:
+            return value.compactMapValues(convertToMoveValue(_:))
+        case let value as Array<Any>:
+            return value.compactMap(convertToMoveValue(_:))
+        default:
+            return nil
+    }
+}
 public struct MoveResource: Codable, Hashable, Sendable {
     public var type: MoveStructId
     public var data: MoveStructValue
