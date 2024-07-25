@@ -119,7 +119,7 @@ let package = Package(
         .testTarget(
             name: "ClientTests",
             dependencies: [
-                "Clients",
+                "Clients"
             ]
         ),
         .testTarget(

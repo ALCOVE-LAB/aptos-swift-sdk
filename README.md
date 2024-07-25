@@ -1,4 +1,7 @@
+
 # Aptos Swift SDK
+![Swift](https://img.shields.io/badge/Swift-5.0-orange) ![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20visionOS-blue) ![Build Status](https://img.shields.io/github/actions/workflow/status/ALCOVE-LAB/aptos-swift-sdk/swift.yml?branch=main)
+
 
 ## Installing the Swift SDk
 

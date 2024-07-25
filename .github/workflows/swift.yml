@@ -12,7 +12,9 @@ on:
 jobs:
   build:
     runs-on: macos-latest
-
+    strategy:
+      matrix:
+        platform: [macOS, iOS, tvOS, watchOS, visionOS]
     steps:
     - uses: actions/checkout@v4
     - name: Build
@@ -26,4 +28,21 @@ jobs:
           sleep 5
         done
     - name: Run tests
-      run: swift test -v
+      run: |
+        case ${{ matrix.platform }} in
+          macOS)
+            swift test -v
+            ;;
+          iOS)
+            xcodebuild test -scheme aptos-sdk-Package -destination 'platform=iOS Simulator,name=iPhone 12,OS=13.0' -enableCodeCoverage YES
+            ;;
+          tvOS)
+            xcodebuild test -scheme aptos-sdk-Package -destination 'platform=tvOS Simulator,name=Apple TV 4K,OS=13.0' -enableCodeCoverage YES
+            ;;
+          watchOS)
+            xcodebuild test -scheme aptos-sdk-Package -destination 'platform=watchOS Simulator,name=Apple Watch Series 6 - 44mm,OS=6.0' -enableCodeCoverage YES
+            ;;
+          visionOS)
+            xcodebuild test -scheme aptos-sdk-Package -destination 'platform=visionOS Simulator,name=Vision Pro,OS=1.0' -enableCodeCoverage YES
+            ;;
+        esac

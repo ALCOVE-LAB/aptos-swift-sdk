@@ -10,6 +10,7 @@ import Utils
 import OpenAPIRuntime
 import BigInt
 
+
 final class GenernalTest: XCTestCase {
 
     func testFetchLedgerInfo() async throws {
@@ -79,7 +80,7 @@ final class GenernalTest: XCTestCase {
         XCTAssert(tableItem.hasPrefix(""))
         XCTAssert(tableItem.hasSuffix(""))
 
-        tableItem.replace("\"", with: "")
+        tableItem = tableItem.replacingOccurrences(of: "\"", with: "")
         let bigInt = BigInt(tableItem)
         XCTAssertGreaterThan(bigInt!, 0, "Supply should be greater than 0")
     }
