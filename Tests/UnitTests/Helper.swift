@@ -1,5 +1,18 @@
 import Foundation
 
+
+func test(_ describe: String, _ exec: () async throws -> Void) async throws  {
+    try await exec()
+}
+
+func test(_ describe: String, _ exec: () throws -> Void) throws  {
+    try exec()
+}
+
+func test(_ describe: String, _ exec: () -> Void)   {
+    exec()
+}
+
 struct Ed25519 {
     static let privateKey = "0xc5338cd251c22daa8c9c9cc94f498cc8a5c7e1d2e75287a5dda91096fe64efa5"
     static let publicKey = "0xde19e5d1880cac87d57484ce9ed2e84cf0f9599f12e7cc3a52e4e7657a763f2c"

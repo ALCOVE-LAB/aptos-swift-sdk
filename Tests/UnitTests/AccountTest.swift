@@ -3,18 +3,6 @@ import Core
 import Types
 
 
-func test(_ describe: String, _ exec: () async throws -> Void) async throws  {
-    try await exec()
-}
-
-func test(_ describe: String, _ exec: () throws -> Void) throws  {
-    try exec()
-}
-
-func test(_ describe: String, _ exec: () -> Void)   {
-    exec()
-}
-
 class AccountTest: XCTestCase {
     func testGenerate() {
         // Account with Legacy Ed25519 scheme

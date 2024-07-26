@@ -587,7 +587,7 @@ package extension TransactionBuilder {
                     case .some(let arg):
                         return MoveOption(value: try checkOrConvertArgument(
                             arg, 
-                            param: structTag.types[0], 
+                            param: structTag.typeArgs[0], 
                             position: position, 
                             genericTypeParams: genericTypeParams))
                 }

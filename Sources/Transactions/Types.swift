@@ -78,7 +78,7 @@ extension U64: ScriptFunctionArgumentTypes {}
 extension U128: ScriptFunctionArgumentTypes {}
 extension U256: ScriptFunctionArgumentTypes {}
 extension AccountAddress: ScriptFunctionArgumentTypes {}
-extension MoveVector: ScriptFunctionArgumentTypes where T == U8 {}
+extension MoveVector: ScriptFunctionArgumentTypes {}
 extension MoveString: ScriptFunctionArgumentTypes {}
 extension FixedBytes: ScriptFunctionArgumentTypes {}
 

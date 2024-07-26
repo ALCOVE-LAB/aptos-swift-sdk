@@ -7,7 +7,7 @@ public enum TypeTagError: Error {
     case invalidVariantIndex
 }
 
-public indirect enum TypeTag: Serializable, Deserializable {
+public indirect enum TypeTag: Serializable, Deserializable, Equatable, Sendable {
     case Bool
     case U8
     case U16
@@ -141,19 +141,61 @@ public indirect enum TypeTag: Serializable, Deserializable {
               return .Generic(value)
       }
     }
+
+    public static func ==(lhs: TypeTag, rhs: TypeTag) -> Bool {
+        switch (lhs, rhs) {
+            case (.Bool, .Bool):
+                return true
+            case (.U8, .U8):
+                return true
+            case (.U16, .U16):
+                return true
+            case (.U32, .U32):
+                return true
+            case (.U64, .U64):
+                return true
+            case (.U128, .U128):
+                return true
+            case (.U256, .U256):
+                return true
+            case (.Address, .Address):
+                return true
+            case (.Signer, .Signer):
+                return true
+            case (.Vector(let lhsValue), .Vector(let rhsValue)):
+                return lhsValue == rhsValue
+            case (.Struct(let lhsValue), .Struct(let rhsValue)):
+                return lhsValue == rhsValue
+            case (.Reference(let lhsValue), .Reference(let rhsValue)):
+                return lhsValue == rhsValue
+            case (.Generic(let lhsValue), .Generic(let rhsValue)):
+                return lhsValue == rhsValue
+            default:
+                return false
+        }
+    }
 }
 
 extension TypeTag {
 
-  func isTypeTag(_ address: AccountAddress, _ moduleName: String, _ structName: String) -> Bool {
-    switch self {
-        case .Struct(let value):
-            return value.address.equals(address) &&
-                value.moduleName.identifier == moduleName &&
-                value.name.identifier == structName
-            default: return false
+    public var isStruct: Bool {
+        switch self {
+            case .Struct:
+                return true
+            default:
+                return false
+        }
     }
-  }
+
+    func isTypeTag(_ address: AccountAddress, _ moduleName: String, _ structName: String) -> Bool {
+        switch self {
+            case .Struct(let value):
+                return value.address.equals(address) &&
+                    value.moduleName.identifier == moduleName &&
+                    value.name.identifier == structName
+                default: return false
+        }
+    }
 
     public func isString() -> Bool {
         return isTypeTag(AccountAddress.ONE, "string", "String");
@@ -167,32 +209,39 @@ extension TypeTag {
         return isTypeTag(AccountAddress.ONE, "object", "Object");
     }
 
-    public struct StructTag: Serializable, Deserializable {
+    public struct StructTag: Serializable, Deserializable, Equatable, Sendable {
         public let address: AccountAddress
         public let moduleName: Identifier
         public let name: Identifier
-        public let types: [TypeTag]
+        public let typeArgs: [TypeTag]
 
-        public init(address: AccountAddress, moduleName: Identifier, name: Identifier, types: [TypeTag]) {
+        public init(address: AccountAddress, moduleName: Identifier, name: Identifier, typeArgs: [TypeTag]) {
             self.address = address
             self.moduleName = moduleName
             self.name = name
-            self.types = types
+            self.typeArgs = typeArgs
         }
 
         public func serialize(serializer: Serializer) throws {
             try serializer.serialize(value: address)
             try serializer.serialize(value: moduleName)
             try serializer.serialize(value: name)
-            try serializer.serializeVector(values: types)
+            try serializer.serializeVector(values: typeArgs)
         }
 
         public static func deserialize(deserializer: Deserializer) throws -> StructTag {
             let address = try deserializer.deserialize(AccountAddress.self)
             let moduleName = try deserializer.deserialize(Identifier.self)
             let name = try deserializer.deserialize(Identifier.self)
-            let types = try deserializer.deserializeVector(TypeTag.self)
-            return .init(address: address, moduleName: moduleName, name: name, types: types)
+            let typeArgs = try deserializer.deserializeVector(TypeTag.self)
+            return .init(address: address, moduleName: moduleName, name: name, typeArgs: typeArgs)
+        }
+
+        public static func ==(lhs: StructTag, rhs: StructTag) -> Bool {
+            return lhs.address == rhs.address &&
+                lhs.moduleName == rhs.moduleName &&
+                lhs.name == rhs.name &&
+                lhs.typeArgs == rhs.typeArgs
         }
     }
 }
@@ -413,7 +462,7 @@ extension TypeTag {
                 if !isValidIdentifier(String(structParts[2])) {
                     throw ParseError(typeTagStr: str, kind: .invalidStructNameCharacter)
                 }
-                return .Struct(.init(address: try AccountAddress.fromString(String(structParts[0])), moduleName: Identifier(String(structParts[1])), name: Identifier(String(structParts[2])), types: types))
+                return .Struct(.init(address: try AccountAddress.fromString(String(structParts[0])), moduleName: Identifier(String(structParts[1])), name: Identifier(String(structParts[2])), typeArgs: types))
         }
     }
 }
