@@ -36,6 +36,7 @@ public struct Faucet: Sendable, FaucetAPIProtocol {
         )
     }
 
+    @discardableResult
     public func fundAccount(accountAddress: AccountAddressInput, amount: Int, options: WaitForTransactionOptions? = nil) async throws -> UserTransaction {
         let accountAddress = try AccountAddress.from(accountAddress).toString()
         let operation = FaucetAPIOperation.fundAccount(accountAddress: accountAddress, amount: amount)
