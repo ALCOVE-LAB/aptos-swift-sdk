@@ -209,7 +209,13 @@ extension TypeTag {
         return isTypeTag(AccountAddress.ONE, "object", "Object");
     }
 
+
     public struct StructTag: Serializable, Deserializable, Equatable, Sendable {
+        public static let aptosCoin: StructTag = .init(address: AccountAddress.ONE, moduleName: Identifier("aptos_coin"), name: Identifier("AptosCoin"), typeArgs: [])
+        public static let string: StructTag = .init(address: AccountAddress.ONE, moduleName: Identifier("string"), name: Identifier("String"), typeArgs: [])
+        public static func option(_ typeArg: TypeTag) -> StructTag { .init(address: AccountAddress.ONE, moduleName: Identifier("option"), name: Identifier("Option"), typeArgs: [typeArg]) }
+        public static func object(_ typeArg: TypeTag) -> StructTag { .init(address: AccountAddress.ONE, moduleName: Identifier("object"), name: Identifier("Object"), typeArgs: [typeArg]) }
+
         public let address: AccountAddress
         public let moduleName: Identifier
         public let name: Identifier
@@ -247,7 +253,7 @@ extension TypeTag {
 }
 
 extension TypeTag {
-    public struct ParseError: LocalizedError {
+    public struct ParseError: LocalizedError, Equatable {
         public enum ErrorKind: String {
             case invalidTypeTag = "unknown type"
             case unexpectedGenericType = "unexpected generic type"
@@ -266,28 +272,37 @@ extension TypeTag {
         public let typeTagStr: String
         public let kind: ErrorKind
 
+        public init(typeTagStr: String = "", kind: ErrorKind) {
+            self.typeTagStr = typeTagStr
+            self.kind = kind
+        }
+
         public var errorDescription: String {
             return localizedDescription
         }
         public var localizedDescription: String {
             return "Failed to parse typeTag '\(typeTagStr)', \(kind.rawValue)"
         }
+
+        public static func ==(lhs: ParseError, rhs: ParseError) -> Bool {
+            return lhs.typeTagStr == rhs.typeTagStr && lhs.kind == rhs.kind
+        }
     }
 }
 
-func isGeneric(_ str: String) -> Bool {
+private func isGeneric(_ str: String) -> Bool {
     return str.range(of: "^T[0-9]+$", options: .regularExpression) != nil
 }
 
-
-func isValidIdentifier(_ str: String) -> Bool {
+private func isValidIdentifier(_ str: String) -> Bool {
     return str.range(of: "^[_a-zA-Z0-9]+$", options: .regularExpression) != nil
 }
 
-func consumeWhitespace(typeStr: String, cur: Int) -> Int {
+private func consumeWhitespace(typeStr: String, cur: Int) -> Int {
     var i = cur
     while i < typeStr.count {
-        let innerChar = typeStr[typeStr.index(typeStr.startIndex, offsetBy: i)]
+        let index = typeStr.index(typeStr.startIndex, offsetBy: i)
+        let innerChar = typeStr[index]
         if !innerChar.isWhitespace {
             break
         }
@@ -354,8 +369,15 @@ extension TypeTag {
                     currentStr = ""
                     parsedTypeTag = true
                 }
+                
                 cur = consumeWhitespace(typeStr: typeStr, cur: cur)
-                let nextChar = typeStr[typeStr.index(typeStr.startIndex, offsetBy: cur)]
+                
+                var nextChar: Character?
+                let nextIndex = typeStr.index(typeStr.startIndex, offsetBy: cur)
+                if nextIndex < typeStr.endIndex {
+                    nextChar = typeStr[nextIndex]
+                }
+
                 if cur < typeStr.count && parsedTypeTag && nextChar != "," && nextChar != ">" {
                     throw ParseError(typeTagStr: typeStr, kind: .unexpectedWhitespaceCharacter)
                 }
@@ -443,7 +465,7 @@ extension TypeTag {
             default:
                 if isGeneric(str) {
                     if allowGenerics {
-                        return .Generic(UInt32(str.split(separator: "T")[1])!)
+                        return .Generic(UInt32(str.components(separatedBy: "T")[1])!)
                     }
                     throw ParseError(typeTagStr: str, kind: .unexpectedGenericType)
                 }
@@ -451,8 +473,8 @@ extension TypeTag {
                     throw ParseError(typeTagStr: str, kind: .invalidTypeTag)
                 }
 
-                let structParts = str.split(separator: ":")
-                if structParts.count != 3 {
+                let structParts = str.components(separatedBy: "::")
+                    if structParts.count != 3 {
                     throw ParseError(typeTagStr: str, kind: .unexpectedStructFormat)
                 }
                 

@@ -113,7 +113,9 @@ let package = Package(
             dependencies: [
                 "Core",
                 "BCS",
-                "Types",
+                "Transactions",
+                "Utils",
+                "Types"
             ]
         ),
         .testTarget(
