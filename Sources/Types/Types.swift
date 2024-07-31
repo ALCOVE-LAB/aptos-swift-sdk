@@ -2,14 +2,6 @@
 import Foundation
 import BCS
 import BigInt
-import Clients
-import OpenAPIURLSession
-
-public typealias Pagination = (offset: String, limit: Int)
-public protocol PagenationRequest {
-    var page: Pagination? { get }
-    var query: Parameter? {set get}
-}
 
 public struct LedgerVersionArg {
     public var ledgerVersion: AnyNumber?

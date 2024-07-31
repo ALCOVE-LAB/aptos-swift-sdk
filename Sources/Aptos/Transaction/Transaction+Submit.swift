@@ -7,7 +7,7 @@ import Core
 import Transactions
 import Types
 
-extension Transaction {
+extension Aptos.Transaction {
     public struct Submit: Sendable {
         private let submitter: TransactionSubmitter
         init(aptosConfig: AptosConfig, client: any ClientInterface) {
@@ -21,7 +21,7 @@ private struct Submitter: TransactionSubmitter {
     let client: any ClientInterface 
 }
 
-extension Transaction.Submit {
+extension Aptos.Transaction.Submit {
 
     public func simple(
         transaction: AnyRawTransaction,

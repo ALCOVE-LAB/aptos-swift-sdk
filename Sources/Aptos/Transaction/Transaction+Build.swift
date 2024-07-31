@@ -4,7 +4,7 @@ import Utils
 import Core
 import Transactions
 
-extension Transaction {
+extension Aptos.Transaction {
     public struct Build: Sendable {
         private let builder: TransactionBuilder
         init(aptosConfig: AptosConfig, client: any ClientInterface) {
@@ -17,7 +17,7 @@ private struct Builder: TransactionBuilder {
     let aptosConfig: AptosConfig
     let client: any ClientInterface
 }
-extension Transaction.Build {
+extension Aptos.Transaction.Build {
 
     public func simple(
         sender: AccountAddressInput,

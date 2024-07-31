@@ -1,11 +1,21 @@
 import Foundation
 import HTTPTypes
-import Types
 import Clients
 import OpenAPIRuntime
+
+public typealias Pagination = (offset: String, limit: Int)
+public protocol PagenationRequest {
+    var page: Pagination? { get }
+    var query: Parameter? {set get}
+}
+
 extension ClientInterface {
 
-    public func convertBodyToAptosError(_ httpBody: HTTPBody?, resp: HTTPResponse, request: any _RequestOptions) async throws -> AptosApiError {
+    public func convertBodyToAptosError(
+        _ httpBody: HTTPBody?, 
+        resp: HTTPResponse, 
+        request: any _RequestOptions
+    ) async throws -> AptosApiError {
         let apiError = try await converter.getResponseBodyAsJSON(
                     AptosApiError.Body.self,
                     from: httpBody) { body in

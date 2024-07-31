@@ -5,7 +5,7 @@ import Clients
 import Core
 import Transactions
 
-extension Transaction {
+extension Aptos.Transaction {
     public struct Sign: Sendable {
         private let submitter: TransactionSubmitter
         init(aptosConfig: AptosConfig, client: any ClientInterface) {
@@ -19,7 +19,7 @@ private struct Submitter: TransactionSubmitter {
     let client: any ClientInterface
 }
 
-extension Transaction.Sign {
+extension Aptos.Transaction.Sign {
 
     public func transaction(signer: AccountProtocol, transaction: AnyRawTransaction) async throws -> AccountAuthenticator {
         return try await submitter.signTransaction(signer: signer, transaction: transaction)

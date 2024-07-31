@@ -1,5 +1,4 @@
 import Foundation
-import Clients
 import OpenAPIRuntime
 import OpenAPIURLSession
 

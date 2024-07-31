@@ -48,7 +48,8 @@ let package = Package(
             dependencies: [
                 "Types",
                 "Core",
-                "Clients"
+                "Clients",
+                "Utils"
             ]
         ),
         .target(
@@ -68,8 +69,7 @@ let package = Package(
             name: "Types",
             dependencies: [
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
-                "BCS",
-                "Clients"
+                "BCS"
             ]
         ),
         .target(
@@ -104,7 +104,8 @@ let package = Package(
         .target(
             name: "Utils",
             dependencies: [
-                "Clients"
+                .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
+                .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession")
             ]
         ),
         // MARK: - TestTargets
