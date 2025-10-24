@@ -12,6 +12,10 @@ let package = Package(
     ],
     products: [
         .library(name: "Aptos", targets: ["Aptos", "APIs", "Core", "BCS", "Transactions", "Utils", "Types"]),
+        .library(name: "Core", targets: ["Core", "Types", "BCS"]),
+        .library(name: "Types", targets: ["Types", "BCS"]),
+        .library(name: "Utils", targets: ["Utils"]),
+        .library(name: "Transactions", targets: ["Transactions", "Core", "BCS", "Types"]),
         .library(name: "BIP32", targets: ["BIP32"]),
     ],
     dependencies: [
@@ -22,7 +26,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-docc-plugin", "1.0.0" ..< "2.0.0"),
         .package(url: "https://github.com/apple/swift-http-types.git", from: "1.1.0"),
         .package(url: "https://github.com/Electric-Coin-Company/MnemonicSwift.git", from: "2.2.4"),
-        .package(url: "https://github.com/GigaBitcoin/secp256k1.swift.git", from: "0.17.0"),
+        .package(url: "https://github.com/GigaBitcoin/secp256k1.swift.git", exact: "0.17.0"),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", from: "1.8.2")
     ],
     targets: [

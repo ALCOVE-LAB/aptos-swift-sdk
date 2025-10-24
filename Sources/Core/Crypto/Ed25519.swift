@@ -76,9 +76,10 @@ public struct Ed25519PrivateKey: PrivateKey {
 	public private(set) var signingKey: Hex
 
 	/// Initialize a private key from a HexInput.
-	/// - Parameter hexInput: a HexInput
+	/// Supports both legacy hex format and AIP-80 compliant format (ed25519-priv-<HEX>).
+	/// - Parameter hexInput: a HexInput (hex string, AIP-80 string, or byte array)
 	public init(_ hexInput: HexInput) throws {
-		let privateKeyHex = try Hex.fromHexInput(hexInput)
+		let privateKeyHex = try AIP80PrivateKey.parseHexInput(hexInput, type: .ed25519)
 		if privateKeyHex.toUInt8Array().count != Ed25519PrivateKey.LENGTH {
 			throw PrivateKeyError.invalidLength
 		}
@@ -139,9 +140,16 @@ public struct Ed25519PrivateKey: PrivateKey {
 	public func toUInt8Array() -> [UInt8] {
 		return signingKey.toUInt8Array()
 	}
-	
+
 	public func toString() -> String {
 		return signingKey.toString()
+	}
+
+	/// Format the private key as an AIP-80 compliant string.
+	/// [Read about AIP-80](https://github.com/aptos-foundation/AIPs/blob/main/aips/aip-80.md)
+	/// - Returns: An AIP-80 compliant string (e.g., "ed25519-priv-0x...")
+	public func toAIP80String() throws -> String {
+		return try AIP80PrivateKey.formatPrivateKey(signingKey, type: .ed25519)
 	}
 }
 

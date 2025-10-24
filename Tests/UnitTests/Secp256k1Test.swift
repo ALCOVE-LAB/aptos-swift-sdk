@@ -131,6 +131,72 @@ class Secp256k1PrivateKeyTest: XCTestCase {
     let key = try Secp256k1PrivateKey.fromDerivationPath(path: path, mnemonic: mnemonic)
     XCTAssertEqual(key.toString(), privateKey)
   }
+
+  // MARK: - AIP-80 Tests
+  func testShouldFormatPrivateKeyToAIP80() throws {
+    let privateKey = try Secp256k1PrivateKey(Secp256k1.privateKey)
+    let aip80String = try privateKey.toAIP80String()
+
+    // Verify the format is correct
+    XCTAssertTrue(aip80String.hasPrefix("secp256k1-priv-"))
+
+    // Extract the hex part and verify it matches
+    let components = aip80String.components(separatedBy: "-")
+    XCTAssertEqual(components.count, 3)
+    XCTAssertEqual(components[0], "secp256k1")
+    XCTAssertEqual(components[1], "priv")
+
+    // Verify the hex part matches the original key (without 0x prefix)
+    let expectedHex = privateKey.toString().replacingOccurrences(of: "0x", with: "")
+    XCTAssertEqual(components[2], expectedHex)
+  }
+
+  func testShouldParseAIP80FormattedPrivateKey() throws {
+    let privateKey = try Secp256k1PrivateKey(Secp256k1.privateKey)
+    let aip80String = try privateKey.toAIP80String()
+
+    // Create a new private key from the AIP-80 string
+    let parsedPrivateKey = try Secp256k1PrivateKey(aip80String)
+
+    // Verify they are equal
+    XCTAssertEqual(parsedPrivateKey.toString(), privateKey.toString())
+    XCTAssertEqual(parsedPrivateKey.toUInt8Array(), privateKey.toUInt8Array())
+  }
+
+  func testShouldFormatAIP80StringToAIP80() throws {
+    // Formatting an already AIP-80 formatted string should return the same format
+    let privateKey = try Secp256k1PrivateKey(Secp256k1.privateKey)
+    let aip80String1 = try privateKey.toAIP80String()
+
+    // Create a new private key from the AIP-80 string and format it again
+    let privateKey2 = try Secp256k1PrivateKey(aip80String1)
+    let aip80String2 = try privateKey2.toAIP80String()
+
+    // Both should be equal
+    XCTAssertEqual(aip80String1, aip80String2)
+  }
+
+  func testShouldSignAndVerifyWithAIP80FormattedKey() throws {
+    let privateKey = try Secp256k1PrivateKey(Secp256k1.privateKey)
+    let aip80String = try privateKey.toAIP80String()
+
+    // Create a new private key from the AIP-80 string
+    let aip80PrivateKey = try Secp256k1PrivateKey(aip80String)
+
+    // Sign a message with both keys
+    let message = "test message"
+    let signature1 = try privateKey.sign(message: message)
+    let signature2 = try aip80PrivateKey.sign(message: message)
+
+    // Both public keys should be equal
+    let publicKey1 = try privateKey.publicKey() as! Secp256k1PublicKey
+    let publicKey2 = try aip80PrivateKey.publicKey() as! Secp256k1PublicKey
+    XCTAssertEqual(publicKey1.toString(), publicKey2.toString())
+
+    // Both signatures should verify with both public keys
+    XCTAssertTrue(try publicKey1.verifySignature(message: message, signature: signature1))
+    XCTAssertTrue(try publicKey2.verifySignature(message: message, signature: signature2))
+  }
 }
 
 class Secp256k1SignatureTest: XCTestCase {

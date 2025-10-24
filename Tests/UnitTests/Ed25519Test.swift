@@ -183,6 +183,95 @@ class Ed25519PrivateKeyTest: XCTestCase {
         let key = try Ed25519PrivateKey.fromDerivationPath(path: path, mnemonic: mnemonic)
         XCTAssertEqual(key.toString(), privateKey)
     }
+
+    // MARK: - AIP-80 Tests
+    func testShouldFormatPrivateKeyToAIP80() throws {
+        let privateKey = try Ed25519PrivateKey(Ed25519.privateKey)
+        let aip80String = try privateKey.toAIP80String()
+
+        // Verify the format is correct
+        XCTAssertTrue(aip80String.hasPrefix("ed25519-priv-"))
+
+        // Extract the hex part and verify it matches
+        let components = aip80String.components(separatedBy: "-")
+        XCTAssertEqual(components.count, 3)
+        XCTAssertEqual(components[0], "ed25519")
+        XCTAssertEqual(components[1], "priv")
+
+        // Verify the hex part matches the original key (without 0x prefix)
+        let expectedHex = privateKey.toString().replacingOccurrences(of: "0x", with: "")
+        XCTAssertEqual(components[2], expectedHex)
+    }
+
+    func testShouldParseAIP80FormattedPrivateKey() throws {
+        let privateKey = try Ed25519PrivateKey(Ed25519.privateKey)
+        let aip80String = try privateKey.toAIP80String()
+
+        // Create a new private key from the AIP-80 string
+        let parsedPrivateKey = try Ed25519PrivateKey(aip80String)
+
+        // Verify they are equal
+        XCTAssertEqual(parsedPrivateKey.toString(), privateKey.toString())
+        XCTAssertEqual(parsedPrivateKey.toUInt8Array(), privateKey.toUInt8Array())
+    }
+
+    func testShouldParseNonAIP80PrivateKeyWithWarning() throws {
+        // This should work but should print a warning (we can't test the warning in unit tests easily)
+        let privateKey = try Ed25519PrivateKey(Ed25519.privateKey)
+        XCTAssertEqual(privateKey.toString(), Ed25519.privateKey)
+    }
+
+    func testShouldFormatAIP80StringToAIP80() throws {
+        // Formatting an already AIP-80 formatted string should return the same format
+        let privateKey = try Ed25519PrivateKey(Ed25519.privateKey)
+        let aip80String1 = try privateKey.toAIP80String()
+
+        // Create a new private key from the AIP-80 string and format it again
+        let privateKey2 = try Ed25519PrivateKey(aip80String1)
+        let aip80String2 = try privateKey2.toAIP80String()
+
+        // Both should be equal
+        XCTAssertEqual(aip80String1, aip80String2)
+    }
+
+    func testShouldParseByteArrayToAIP80() throws {
+        let hexUint8Array: [UInt8] = [
+            197, 51, 140, 210, 81, 194, 45, 170, 140, 156, 156, 201, 79, 73, 140, 200, 165, 199, 225, 210, 231, 82, 135,
+            165, 221, 169, 16, 150, 254, 100, 239, 165
+        ]
+
+        let privateKey = try Ed25519PrivateKey(hexUint8Array)
+        let aip80String = try privateKey.toAIP80String()
+
+        // Verify the format is correct
+        XCTAssertTrue(aip80String.hasPrefix("ed25519-priv-"))
+
+        // Parse it back and verify
+        let parsedPrivateKey = try Ed25519PrivateKey(aip80String)
+        XCTAssertEqual(parsedPrivateKey.toUInt8Array(), hexUint8Array)
+    }
+
+    func testShouldSignAndVerifyWithAIP80FormattedKey() throws {
+        let privateKey = try Ed25519PrivateKey(Ed25519.privateKey)
+        let aip80String = try privateKey.toAIP80String()
+
+        // Create a new private key from the AIP-80 string
+        let aip80PrivateKey = try Ed25519PrivateKey(aip80String)
+
+        // Sign a message with both keys
+        let message = "test message"
+        let signature1 = try privateKey.sign(message: message)
+        let signature2 = try aip80PrivateKey.sign(message: message)
+
+        // Both public keys should be equal
+        let publicKey1 = try privateKey.publicKey() as! Ed25519PublicKey
+        let publicKey2 = try aip80PrivateKey.publicKey() as! Ed25519PublicKey
+        XCTAssertEqual(publicKey1.toString(), publicKey2.toString())
+
+        // Both signatures should verify with both public keys
+        XCTAssertTrue(try publicKey1.verifySignature(message: message, signature: signature1))
+        XCTAssertTrue(try publicKey2.verifySignature(message: message, signature: signature2))
+    }
 }
     
 

@@ -45,8 +45,11 @@ public struct Secp256k1PrivateKey: PrivateKey {
     public static let LENGTH = 32
     public private(set) var key: Hex
 
+    /// Initialize a private key from a HexInput.
+    /// Supports both legacy hex format and AIP-80 compliant format (secp256k1-priv-<HEX>).
+    /// - Parameter hexInput: a HexInput (hex string, AIP-80 string, or byte array)
     public init(_ hexInput: HexInput) throws {
-        let hex = try Hex.fromHexInput(hexInput)
+        let hex = try AIP80PrivateKey.parseHexInput(hexInput, type: .secp256k1)
         if hex.toUInt8Array().count != Secp256k1PrivateKey.LENGTH {
             throw PrivateKeyError.invalidLength
         }
@@ -91,6 +94,13 @@ public struct Secp256k1PrivateKey: PrivateKey {
 
     public func toString() -> String {
         return key.toString()
+    }
+
+    /// Format the private key as an AIP-80 compliant string.
+    /// [Read about AIP-80](https://github.com/aptos-foundation/AIPs/blob/main/aips/aip-80.md)
+    /// - Returns: An AIP-80 compliant string (e.g., "secp256k1-priv-0x...")
+    public func toAIP80String() throws -> String {
+        return try AIP80PrivateKey.formatPrivateKey(key, type: .secp256k1)
     }
 }
 

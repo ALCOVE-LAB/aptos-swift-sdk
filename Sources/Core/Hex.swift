@@ -30,7 +30,8 @@ extension String: HexInput {}
 extension Data: HexInput {}
 extension Array: HexInput where Element == UInt8 {}
 // 0x1234
-extension Int: HexInput {} 
+extension Int: HexInput {}
+extension Hex: HexInput {} 
 
 public struct Hex: Sendable {
     private let data: Data
@@ -79,6 +80,8 @@ public struct Hex: Sendable {
 
     public static func fromHexInput(_ hexInput: HexInput) throws -> Hex {
         switch hexInput {
+        case let hex as Hex:
+            return hex
         case let str as String:
             return try Hex.fromHexString(str)
         case let data as Data:
